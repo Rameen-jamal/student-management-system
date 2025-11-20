@@ -1,0 +1,12 @@
+1. 
+issue in admin panel: when creating a new user, password has to be changed once and then login
+else login is shown as invalid (fix this so it takes the first password we set)
+
+2.
+create 'faculty-dashboard' and 'ta-dashboard'
+
+3.
+add courses and check enrollments and working
+
+4.
+add more attributes to each model (table)

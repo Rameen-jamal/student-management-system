@@ -1,0 +1,804 @@
+# from rest_framework import viewsets, permissions
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework.parsers import MultiPartParser, FormParser
+# from .models import Course, Assignment, Submission, Attendance, Quiz, QuizGrade, TATask
+# from .serializers import (
+#     CourseSerializer, AssignmentSerializer, SubmissionSerializer,
+#     AttendanceSerializer, QuizSerializer, QuizGradeSerializer, TATaskSerializer
+# )
+
+
+# class CourseViewSet(viewsets.ModelViewSet):
+#     serializer_class = CourseSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         # Only courses where current user is the faculty
+#         return Course.objects.filter(faculty__user=self.request.user)
+
+
+# class AssignmentViewSet(viewsets.ModelViewSet):
+#     serializer_class = AssignmentSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]  # important for file uploads
+
+#     def get_queryset(self):
+#         # Only show assignments uploaded by current faculty
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Assignment.objects.filter(uploaded_by=faculty_profile)
+#         return Assignment.objects.none()
+
+#     def perform_create(self, serializer):
+#         # Automatically assign current faculty as uploaded_by
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         serializer.save(uploaded_by=faculty_profile)
+
+
+# class SubmissionViewSet(viewsets.ModelViewSet):
+#     serializer_class = SubmissionSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+
+#     def get_queryset(self):
+#         # Only submissions for assignments uploaded by current faculty
+#         return Submission.objects.filter(assignment__uploaded_by__user=self.request.user)
+
+
+# class AttendanceViewSet(viewsets.ModelViewSet):
+#     serializer_class = AttendanceSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         return Attendance.objects.filter(course__faculty__user=self.request.user)
+
+
+# class QuizViewSet(viewsets.ModelViewSet):
+#     serializer_class = QuizSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         return Quiz.objects.filter(course__faculty__user=self.request.user)
+
+
+# class QuizGradeViewSet(viewsets.ModelViewSet):
+#     serializer_class = QuizGradeSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         return QuizGrade.objects.filter(quiz__course__faculty__user=self.request.user)
+
+
+# class TATaskViewSet(viewsets.ModelViewSet):
+#     serializer_class = TATaskSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         return TATask.objects.filter(assigned_by__user=self.request.user)
+# from rest_framework import viewsets, permissions
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework.parsers import MultiPartParser, FormParser
+# from .models import Course, Assignment, Submission, Attendance, Quiz, QuizGrade, TATask
+# from .serializers import (
+#     CourseSerializer, AssignmentSerializer, SubmissionSerializer,
+#     AttendanceSerializer, QuizSerializer, QuizGradeSerializer, TATaskSerializer
+# )
+
+
+# class CourseViewSet(viewsets.ModelViewSet):
+#     queryset = Course.objects.all()  # Add this line
+#     serializer_class = CourseSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         # Only courses where current user is the faculty
+#         return Course.objects.filter(faculty__user=self.request.user)
+
+
+# class AssignmentViewSet(viewsets.ModelViewSet):
+#     queryset = Assignment.objects.all()  # Add this line
+#     serializer_class = AssignmentSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]  # important for file uploads
+
+#     def get_queryset(self):
+#         # Only show assignments uploaded by current faculty
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Assignment.objects.filter(uploaded_by=faculty_profile)
+#         return Assignment.objects.none()
+
+#     def perform_create(self, serializer):
+#         # Automatically assign current faculty as uploaded_by
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         serializer.save(uploaded_by=faculty_profile)
+
+
+# class SubmissionViewSet(viewsets.ModelViewSet):
+#     queryset = Submission.objects.all()  # Add this line
+#     serializer_class = SubmissionSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+
+#     def get_queryset(self):
+#         # Only submissions for assignments uploaded by current faculty
+#         return Submission.objects.filter(assignment__uploaded_by__user=self.request.user)
+
+
+# class AttendanceViewSet(viewsets.ModelViewSet):
+#     queryset = Attendance.objects.all()  # Add this line
+#     serializer_class = AttendanceSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         return Attendance.objects.filter(course__faculty__user=self.request.user)
+
+
+# class QuizViewSet(viewsets.ModelViewSet):
+#     queryset = Quiz.objects.all()  # Add this line
+#     serializer_class = QuizSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         return Quiz.objects.filter(course__faculty__user=self.request.user)
+
+
+# class QuizGradeViewSet(viewsets.ModelViewSet):
+#     queryset = QuizGrade.objects.all()  # Add this line
+#     serializer_class = QuizGradeSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         return QuizGrade.objects.filter(quiz__course__faculty__user=self.request.user)
+
+
+# class TATaskViewSet(viewsets.ModelViewSet):
+#     queryset = TATask.objects.all()  # Add this line
+#     serializer_class = TATaskSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         return TATask.objects.filter(assigned_by__user=self.request.user)
+# from django.shortcuts import render
+# from rest_framework import viewsets
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework.parsers import MultiPartParser, FormParser
+
+# from .models import Course, Assignment, Submission, Attendance, Quiz, QuizGrade, TATask
+# from .serializers import (
+#     CourseSerializer, AssignmentSerializer, SubmissionSerializer,
+#     AttendanceSerializer, QuizSerializer, QuizGradeSerializer, TATaskSerializer
+# )
+# from faculty.models import FacultyProfile
+
+
+# # ------------------ DRF ViewSets ------------------
+
+# class CourseViewSet(viewsets.ModelViewSet):
+#     serializer_class = CourseSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return faculty_profile.courses_teaching.all()
+#         return Course.objects.none()
+
+
+# class AssignmentViewSet(viewsets.ModelViewSet):
+#     serializer_class = AssignmentSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Assignment.objects.filter(uploaded_by=faculty_profile)
+#         return Assignment.objects.none()
+
+#     def perform_create(self, serializer):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         serializer.save(uploaded_by=faculty_profile)
+
+
+# class SubmissionViewSet(viewsets.ModelViewSet):
+#     serializer_class = SubmissionSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+
+#     def get_queryset(self):
+#         return Submission.objects.filter(assignment__uploaded_by__user=self.request.user)
+
+
+# class AttendanceViewSet(viewsets.ModelViewSet):
+#     serializer_class = AttendanceSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Attendance.objects.filter(course__in=faculty_profile.courses_teaching.all())
+#         return Attendance.objects.none()
+
+
+# class QuizViewSet(viewsets.ModelViewSet):
+#     serializer_class = QuizSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Quiz.objects.filter(course__in=faculty_profile.courses_teaching.all())
+#         return Quiz.objects.none()
+
+
+# class QuizGradeViewSet(viewsets.ModelViewSet):
+#     serializer_class = QuizGradeSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return QuizGrade.objects.filter(quiz__course__in=faculty_profile.courses_teaching.all())
+#         return QuizGrade.objects.none()
+
+
+# class TATaskViewSet(viewsets.ModelViewSet):
+#     serializer_class = TATaskSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return TATask.objects.filter(assigned_by=faculty_profile)
+#         return TATask.objects.none()
+# from django.shortcuts import render
+# from rest_framework import viewsets
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework.parsers import MultiPartParser, FormParser
+
+# from .models import Course, Assignment, Submission, Attendance, Quiz, QuizGrade, TATask
+# from .serializers import (
+#     CourseSerializer, AssignmentSerializer, SubmissionSerializer,
+#     AttendanceSerializer, QuizSerializer, QuizGradeSerializer, TATaskSerializer
+# )
+# from faculty.models import FacultyProfile
+
+
+# # ------------------ DRF ViewSets ------------------
+
+# # class CourseViewSet(viewsets.ModelViewSet):
+# #     serializer_class = CourseSerializer
+# #     permission_classes = [IsAuthenticated]
+
+# #     def get_queryset(self):
+# #         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+# #         if faculty_profile:
+# #             return faculty_profile.courses_teaching.all()
+# #         return Course.objects.none()
+# class CourseViewSet(viewsets.ModelViewSet):
+#     serializer_class = CourseSerializer
+#     permission_classes = [IsAuthenticated]
+#     queryset = Course.objects.all()  # Add this line
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return faculty_profile.courses_teaching.all()
+#         return Course.objects.none()
+
+
+# class AssignmentViewSet(viewsets.ModelViewSet):
+#     serializer_class = AssignmentSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+#     queryset = Assignment.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Assignment.objects.filter(uploaded_by=faculty_profile)
+#         return Assignment.objects.none()
+
+#     def perform_create(self, serializer):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         serializer.save(uploaded_by=faculty_profile)
+
+
+# class SubmissionViewSet(viewsets.ModelViewSet):
+#     serializer_class = SubmissionSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+#     queryset = Submission.objects.all()
+
+#     def get_queryset(self):
+#         return Submission.objects.filter(assignment__uploaded_by__user=self.request.user)
+
+
+# class AttendanceViewSet(viewsets.ModelViewSet):
+#     serializer_class = AttendanceSerializer
+#     permission_classes = [IsAuthenticated]
+#     queryset = Attendance.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Attendance.objects.filter(course__in=faculty_profile.courses_teaching.all())
+#         return Attendance.objects.none()
+
+
+# class QuizViewSet(viewsets.ModelViewSet):
+#     serializer_class = QuizSerializer
+#     permission_classes = [IsAuthenticated]
+#     queryset = Quiz.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Quiz.objects.filter(course__in=faculty_profile.courses_teaching.all())
+#         return Quiz.objects.none()
+
+
+# class QuizGradeViewSet(viewsets.ModelViewSet):
+#     serializer_class = QuizGradeSerializer
+#     permission_classes = [IsAuthenticated]
+#     queryset = QuizGrade.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return QuizGrade.objects.filter(quiz__course__in=faculty_profile.courses_teaching.all())
+#         return QuizGrade.objects.none()
+
+
+# class TATaskViewSet(viewsets.ModelViewSet):
+#     serializer_class = TATaskSerializer
+#     permission_classes = [IsAuthenticated]
+#     queryset = TATask.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return TATask.objects.filter(assigned_by=faculty_profile)
+#         return TATask.objects.none()
+
+
+
+# from rest_framework import viewsets, status
+# from rest_framework.decorators import action
+# from rest_framework.response import Response
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework.parsers import MultiPartParser, FormParser
+
+# from .models import (
+#     Course, Assignment, Submission, Attendance, Quiz, QuizGrade, TATask, CourseAnnouncement
+# )
+# from .serializers import (
+#     CourseSerializer, AssignmentSerializer, SubmissionSerializer,
+#     AttendanceSerializer, QuizSerializer, QuizGradeSerializer, TATaskSerializer,
+#     CourseAnnouncementSerializer
+# )
+# from faculty.models import FacultyProfile
+# from students.models import StudentProfile
+
+# # ------------------ Course ------------------
+# class CourseViewSet(viewsets.ModelViewSet):
+#     serializer_class = CourseSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+#     queryset = Course.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return faculty_profile.courses_teaching.all()
+#         return Course.objects.none()
+
+#     # Students list for a course
+#     @action(detail=True, methods=['get'])
+#     def students(self, request, pk=None):
+#         course = self.get_object()
+#         students = course.students.all()  # Assuming you have a M2M for enrolled students
+#         data = [{"id": s.id, "name": f"{s.first_name} {s.last_name}", "email": s.user.email} for s in students]
+#         return Response(data)
+
+#     # Post course announcement
+#     @action(detail=True, methods=['post'])
+#     def post_announcement(self, request, pk=None):
+#         course = self.get_object()
+#         serializer = CourseAnnouncementSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save(course=course, posted_by=getattr(request.user, 'facultyprofile', None))
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+# from rest_framework import viewsets, status
+# from rest_framework.decorators import action
+# from rest_framework.response import Response
+# from rest_framework.permissions import IsAuthenticated
+# from rest_framework.parsers import MultiPartParser, FormParser
+
+# from .models import (
+#     Course, Assignment, Submission, Attendance, Quiz, QuizGrade, TATask,
+#     CourseAnnouncement, StudentMessage
+# )
+# from .serializers import (
+#     CourseSerializer, AssignmentSerializer, SubmissionSerializer,
+#     AttendanceSerializer, QuizSerializer, QuizGradeSerializer, TATaskSerializer,
+#     CourseAnnouncementSerializer, StudentMessageSerializer
+# )
+# from faculty.models import FacultyProfile
+# from students.models import StudentProfile
+
+# # --- CourseViewSet ---
+# class CourseViewSet(viewsets.ModelViewSet):
+#     serializer_class = CourseSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+#     queryset = Course.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return faculty_profile.courses.all()
+#         return Course.objects.none()
+
+#     # List students in a course
+#     @action(detail=True, methods=['get'])
+#     def students(self, request, pk=None):
+#         course = self.get_object()
+#         students = courses.students.all()
+#         data = [{"id": s.id, "name": f"{s.first_name} {s.last_name}", "email": s.user.email} for s in students]
+#         return Response(data)
+
+#     # Post course announcement
+#     @action(detail=True, methods=['post'])
+#     def post_announcement(self, request, pk=None):
+#         course = self.get_object()
+#         serializer = CourseAnnouncementSerializer(data=request.data)
+#         if serializer.is_valid():
+#             serializer.save(course=course, posted_by=getattr(request.user, 'facultyprofile', None))
+#             return Response(serializer.data, status=status.HTTP_201_CREATED)
+#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+#     # Send message to a student
+#     @action(detail=True, methods=['post'])
+#     def message_student(self, request, pk=None):
+#         course = self.get_object()
+#         student_id = request.data.get('student_id')
+#         subject = request.data.get('subject')
+#         message_text = request.data.get('message')
+#         try:
+#             student = StudentProfile.objects.get(id=student_id)
+#         except StudentProfile.DoesNotExist:
+#             return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+
+#         msg = StudentMessage.objects.create(
+#             sender=getattr(request.user, 'facultyprofile', None),
+#             recipient=student,
+#             course=course,
+#             subject=subject,
+#             message=message_text
+#         )
+#         serializer = StudentMessageSerializer(msg)
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+# # --- SubmissionViewSet ---
+# class SubmissionViewSet(viewsets.ModelViewSet):
+#     serializer_class = SubmissionSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+#     queryset = Submission.objects.all()
+
+#     def get_queryset(self):
+#         return Submission.objects.filter(assignment__uploaded_by__user=self.request.user)
+
+#     # Approve/reject late submission
+#     @action(detail=True, methods=['post'])
+#     def update_status(self, request, pk=None):
+#         submission = self.get_object()
+#         status_choice = request.data.get('status')
+#         feedback = request.data.get('feedback', submission.feedback)
+#         grade = request.data.get('grade', submission.grade)
+
+#         if status_choice not in ['pending', 'approved', 'rejected']:
+#             return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
+
+#         submission.status = status_choice
+#         submission.feedback = feedback
+#         submission.grade = grade
+#         submission.save()
+#         return Response({"status": f"Submission {status_choice}"})
+
+
+# # ------------------ Assignment ------------------
+# class AssignmentViewSet(viewsets.ModelViewSet):
+#     serializer_class = AssignmentSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+#     queryset = Assignment.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Assignment.objects.filter(uploaded_by=faculty_profile)
+#         return Assignment.objects.none()
+
+#     def perform_create(self, serializer):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         serializer.save(uploaded_by=faculty_profile)
+
+# # ------------------ Submission ------------------
+# # class SubmissionViewSet(viewsets.ModelViewSet):
+# #     serializer_class = SubmissionSerializer
+# #     permission_classes = [IsAuthenticated]
+# #     parser_classes = [MultiPartParser, FormParser]
+# #     queryset = Submission.objects.all()
+
+# #     def get_queryset(self):
+# #         return Submission.objects.filter(assignment__uploaded_by__user=self.request.user)
+
+# #     # Approve or reject late submission
+# #     @action(detail=True, methods=['post'])
+# #     def approve_late(self, request, pk=None):
+# #         submission = self.get_object()
+# #         submission.feedback = request.data.get('feedback', submission.feedback)
+# #         submission.grade = request.data.get('grade', submission.grade)
+# #         submission.save()
+# #         return Response({"status": "Late submission updated"})
+
+# # ------------------ Attendance ------------------
+# class AttendanceViewSet(viewsets.ModelViewSet):
+#     serializer_class = AttendanceSerializer
+#     permission_classes = [IsAuthenticated]
+#     parser_classes = [MultiPartParser, FormParser]
+#     queryset = Attendance.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Attendance.objects.filter(course__in=faculty_profile.courses.all())
+#         return Attendance.objects.none()
+
+#     # Mark attendance manually
+#     @action(detail=True, methods=['post'])
+#     def mark_attendance(self, request, pk=None):
+#         attendance = self.get_object()
+#         student_ids = request.data.get('student_ids', [])
+#         students = StudentProfile.objects.filter(id__in=student_ids)
+#         attendance.students_present.set(students)
+#         attendance.marked_by = getattr(request.user, 'facultyprofile', None)
+#         attendance.save()
+#         return Response({"status": "Attendance marked"})
+
+# # ------------------ Quiz ------------------
+# class QuizViewSet(viewsets.ModelViewSet):
+#     serializer_class = QuizSerializer
+#     permission_classes = [IsAuthenticated]
+#     queryset = Quiz.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return Quiz.objects.filter(course__in=faculty_profile.courses.all())
+#         return Quiz.objects.none()
+
+# # ------------------ Quiz Grades ------------------
+# class QuizGradeViewSet(viewsets.ModelViewSet):
+#     serializer_class = QuizGradeSerializer
+#     permission_classes = [IsAuthenticated]
+#     queryset = QuizGrade.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return QuizGrade.objects.filter(quiz__course__in=faculty_profile.courses.all())
+#         return QuizGrade.objects.none()
+
+# # ------------------ TA Task ------------------
+# class TATaskViewSet(viewsets.ModelViewSet):
+#     serializer_class = TATaskSerializer
+#     permission_classes = [IsAuthenticated]
+#     queryset = TATask.objects.all()
+
+#     def get_queryset(self):
+#         faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+#         if faculty_profile:
+#             return TATask.objects.filter(assigned_by=faculty_profile)
+#         return TATask.objects.none()
+
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import JSONParser
+
+from .models import (
+    Course, Assignment, Submission, Attendance, Quiz, QuizGrade, TATask,
+    CourseAnnouncement, StudentMessage
+)
+from .serializers import (
+    CourseSerializer, AssignmentSerializer, SubmissionSerializer,
+    AttendanceSerializer, QuizSerializer, QuizGradeSerializer, TATaskSerializer,
+    CourseAnnouncementSerializer, StudentMessageSerializer
+)
+from faculty.models import FacultyProfile
+from students.models import StudentProfile
+
+# --- CourseViewSet (FIXED: students action) ---
+class CourseViewSet(viewsets.ModelViewSet):
+    serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    queryset = Course.objects.all()
+
+    def get_queryset(self):
+        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+        if faculty_profile:
+            # Filters courses taught by the logged-in faculty
+            return faculty_profile.courses.all()
+        return Course.objects.none()
+
+    # List students in a course 
+    @action(detail=True, methods=['get'])
+    def students(self, request, pk=None):
+        course = self.get_object()
+        # FIX: Changed 'courses' to 'course'
+        students = course.students.all() 
+        data = [{"id": s.id, "name": f"{s.first_name} {s.last_name}", "email": s.user.email} for s in students]
+        return Response(data)
+
+    # Post course announcement
+    @action(detail=True, methods=['post'], parser_classes=[JSONParser]) # <--- ADDED JSONPARSER
+    def post_announcement(self, request, pk=None):
+        course = self.get_object()
+        faculty_profile = getattr(request.user, 'facultyprofile', None)
+
+        if not faculty_profile:
+            return Response(
+                {"detail": "User is not linked to a Faculty Profile. Please check your data setup in the Admin panel."}, 
+                status=status.HTTP_403_FORBIDDEN
+            )
+    
+    # Mark attendance for the specific course
+    @action(detail=True, methods=['post'], url_path='mark_attendance')
+    def mark_attendance(self, request, pk=None):
+        course = self.get_object() 
+        student_ids = request.data.get('student_ids', [])
+        
+        marked_by = getattr(request.user, 'facultyprofile', None)
+        
+        # Create a new Attendance object
+        attendance = Attendance.objects.create(
+            course=course, 
+            marked_by=marked_by, 
+            attendance_type='manual' 
+        )
+        
+        # Link the present students
+        students_to_set = StudentProfile.objects.filter(id__in=student_ids)
+        attendance.students_present.set(students_to_set) 
+        
+        serializer = AttendanceSerializer(attendance) 
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+    # Send message to a student
+    @action(detail=True, methods=['post'])
+    def message_student(self, request, pk=None):
+        course = self.get_object()
+        student_id = request.data.get('student_id')
+        subject = request.data.get('subject')
+        message_text = request.data.get('message')
+        try:
+            student = StudentProfile.objects.get(id=student_id)
+        except StudentProfile.DoesNotExist:
+            return Response({"error": "Student not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        msg = StudentMessage.objects.create(
+            sender=getattr(request.user, 'facultyprofile', None),
+            recipient=student,
+            course=course,
+            subject=subject,
+            message=message_text
+        )
+        serializer = StudentMessageSerializer(msg)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+# ------------------ SubmissionViewSet ------------------
+class SubmissionViewSet(viewsets.ModelViewSet):
+    serializer_class = SubmissionSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    queryset = Submission.objects.all()
+
+    def get_queryset(self):
+        return Submission.objects.filter(assignment__uploaded_by__user=self.request.user)
+
+    # Approve/reject late submission
+    @action(detail=True, methods=['post'])
+    def update_status(self, request, pk=None):
+        submission = self.get_object()
+        status_choice = request.data.get('status')
+        feedback = request.data.get('feedback', submission.feedback)
+        grade = request.data.get('grade', submission.grade)
+
+        if status_choice not in ['pending', 'approved', 'rejected']:
+            return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
+
+        submission.status = status_choice
+        submission.feedback = feedback
+        submission.grade = grade
+        submission.save()
+        return Response({"status": f"Submission {status_choice}"})
+
+
+# ------------------ AssignmentViewSet ------------------
+class AssignmentViewSet(viewsets.ModelViewSet):
+    serializer_class = AssignmentSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    queryset = Assignment.objects.all()
+
+    def get_queryset(self):
+        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+        if faculty_profile:
+            return Assignment.objects.filter(uploaded_by=faculty_profile)
+        return Assignment.objects.none()
+
+    def perform_create(self, serializer):
+        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+        serializer.save(uploaded_by=faculty_profile)
+
+
+# ------------------ AttendanceViewSet ------------------
+class AttendanceViewSet(viewsets.ModelViewSet):
+    serializer_class = AttendanceSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]
+    queryset = Attendance.objects.all()
+
+    def get_queryset(self):
+        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+        if faculty_profile:
+            # Filters attendance records for courses taught by the faculty
+            return Attendance.objects.filter(course__in=faculty_profile.courses.all())
+        return Attendance.objects.none()
+
+# ------------------ QuizViewSet ------------------
+class QuizViewSet(viewsets.ModelViewSet):
+    serializer_class = QuizSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Quiz.objects.all()
+
+    def get_queryset(self):
+        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+        if faculty_profile:
+            return Quiz.objects.filter(course__in=faculty_profile.courses.all())
+        return Quiz.objects.none()
+
+# ------------------ QuizGradeViewSet ------------------
+class QuizGradeViewSet(viewsets.ModelViewSet):
+    serializer_class = QuizGradeSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = QuizGrade.objects.all()
+
+    def get_queryset(self):
+        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+        if faculty_profile:
+            return QuizGrade.objects.filter(quiz__course__in=faculty_profile.courses.all())
+        return QuizGrade.objects.none()
+
+# ------------------ TA TaskViewSet ------------------
+class TATaskViewSet(viewsets.ModelViewSet):
+    serializer_class = TATaskSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = TATask.objects.all()
+
+    def get_queryset(self):
+        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
+        if faculty_profile:
+            return TATask.objects.filter(assigned_by=faculty_profile)
+        return TATask.objects.none()
