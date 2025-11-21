@@ -863,3 +863,65 @@ class TATaskViewSet(viewsets.ModelViewSet):
         if faculty_profile:
             return TATask.objects.filter(assigned_by=faculty_profile)
         return TATask.objects.none()
+
+
+# ------------------ Admin Course ViewSet ------------------
+class AdminCourseViewSet(viewsets.ModelViewSet):
+    """Admin endpoint for managing all courses"""
+    serializer_class = CourseSerializer
+    permission_classes = [IsAuthenticated]
+    parser_classes = [JSONParser, MultiPartParser, FormParser]
+    queryset = Course.objects.all()
+
+    def get_queryset(self):
+        # Only admins can access all courses
+        if self.request.user.role != 'admin':
+            return Course.objects.none()
+        return Course.objects.all().order_by('code')
+
+    @action(detail=True, methods=['post'], url_path='assign_faculty', parser_classes=[JSONParser])
+    def assign_faculty(self, request, pk=None):
+        """Assign a faculty member to a course"""
+        if request.user.role != 'admin':
+            return Response(
+                {'error': 'Only admins can assign faculty'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        course = self.get_object()
+        faculty_id = request.data.get('faculty_id')
+        
+        if not faculty_id:
+            return Response(
+                {'error': 'faculty_id is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            faculty = FacultyProfile.objects.get(id=faculty_id)
+            course.faculty = faculty
+            course.save()
+            
+            serializer = self.get_serializer(course)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except FacultyProfile.DoesNotExist:
+            return Response(
+                {'error': 'Faculty not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+    @action(detail=True, methods=['post'], url_path='unassign_faculty', parser_classes=[JSONParser])
+    def unassign_faculty(self, request, pk=None):
+        """Remove faculty assignment from a course"""
+        if request.user.role != 'admin':
+            return Response(
+                {'error': 'Only admins can unassign faculty'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        course = self.get_object()
+        course.faculty = None
+        course.save()
+        
+        serializer = self.get_serializer(course)
+        return Response(serializer.data, status=status.HTTP_200_OK)

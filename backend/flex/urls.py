@@ -3,16 +3,19 @@ from django.urls import path, include
 from rest_framework import routers
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
-from students.views import StudentProfileViewSet
+from students.views import StudentProfileViewSet, EnrollmentViewSet
 from faculty.views import FacultyProfileViewSet
 from ta.views import TAProfileViewSet
 from core.views import (
     CourseViewSet, AssignmentViewSet, SubmissionViewSet,
-    AttendanceViewSet, QuizViewSet, QuizGradeViewSet, TATaskViewSet
+    AttendanceViewSet, QuizViewSet, QuizGradeViewSet, TATaskViewSet,
+    AdminCourseViewSet
 )
 from administration.views import FeeRecordViewSet, PaymentViewSet
-from accounts.views import UserRegistrationView, current_user, update_profile, change_password
-from accounts.views import login_view
+from accounts.views import (
+    UserRegistrationView, current_user, update_profile, change_password,
+    login_view, AdminUserViewSet
+)
 from django.conf import settings
 from django.conf.urls.static import static
 router = routers.DefaultRouter()
@@ -29,6 +32,11 @@ router.register(r'ta-tasks', TATaskViewSet)
 router.register(r'fee-records', FeeRecordViewSet)
 router.register(r'payments', PaymentViewSet)
 router.register(r'faculty', FacultyProfileViewSet, basename='faculty')
+
+# Admin-specific endpoints
+router.register(r'admin/users', AdminUserViewSet, basename='admin-users')
+router.register(r'admin/courses', AdminCourseViewSet, basename='admin-courses')
+router.register(r'enrollments', EnrollmentViewSet, basename='enrollments')
 
 
 urlpatterns = [

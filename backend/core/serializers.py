@@ -175,7 +175,12 @@ class StudentMessageSerializer(serializers.ModelSerializer):
 
 # Course Serializer (FIXED)
 class CourseSerializer(serializers.ModelSerializer):
-    faculty = FacultyMiniSerializer(read_only=True)
+    faculty_detail = FacultyMiniSerializer(source='faculty', read_only=True)
+    faculty = serializers.PrimaryKeyRelatedField(
+        queryset=FacultyProfile.objects.all(),
+        required=False,
+        allow_null=True
+    )
     tas_detail = serializers.SerializerMethodField()
     announcements_detail = serializers.SerializerMethodField()
     attendance_detail = serializers.SerializerMethodField()
@@ -184,7 +189,7 @@ class CourseSerializer(serializers.ModelSerializer):
         model = Course
         fields = [
             'id', 'name', 'code', 'description', 'credit_hours', 'semester', 
-            'faculty', 'tas', 'tas_detail', 
+            'faculty', 'faculty_detail', 'tas', 'tas_detail', 
             'syllabus', 'weekly_topics', 'learning_materials', 'slides', 'videos',
             'announcements_detail', 'attendance_detail'
         ]
