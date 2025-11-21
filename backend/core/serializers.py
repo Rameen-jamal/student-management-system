@@ -240,6 +240,8 @@ class AssignmentSerializer(serializers.ModelSerializer):
 class SubmissionSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
     assignment_title = serializers.CharField(source='assignment.title', read_only=True)
+    student = serializers.SerializerMethodField()
+    assignment = serializers.SerializerMethodField()
 
     class Meta:
         model = Submission
@@ -248,6 +250,33 @@ class SubmissionSerializer(serializers.ModelSerializer):
 
     def get_student_name(self, obj):
         return f"{obj.student.first_name} {obj.student.last_name}"
+    
+    def get_student(self, obj):
+        if obj.student:
+            return {
+                'id': obj.student.id,
+                'full_name': f"{obj.student.first_name} {obj.student.last_name}",
+                'first_name': obj.student.first_name,
+                'last_name': obj.student.last_name,
+                'enrollment_number': obj.student.enrollment_number
+            }
+        return None
+    
+    def get_assignment(self, obj):
+        if obj.assignment:
+            return {
+                'id': obj.assignment.id,
+                'title': obj.assignment.title,
+                'description': obj.assignment.description,
+                'max_points': obj.assignment.max_points,
+                'due_date': obj.assignment.due_date,
+                'course': {
+                    'id': obj.assignment.course.id,
+                    'code': obj.assignment.course.code,
+                    'name': obj.assignment.course.name
+                } if obj.assignment.course else None
+            }
+        return None
 
 # Attendance Serializer
 class AttendanceSerializer(serializers.ModelSerializer):

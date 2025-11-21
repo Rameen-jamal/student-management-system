@@ -634,10 +634,20 @@ class CourseViewSet(viewsets.ModelViewSet):
     queryset = Course.objects.all()
 
     def get_queryset(self):
-        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
-        if faculty_profile:
-            # Filters courses taught by the logged-in faculty
-            return faculty_profile.courses.all()
+        user = self.request.user
+        
+        # Faculty: see courses they teach
+        if hasattr(user, 'facultyprofile'):
+            return user.facultyprofile.courses.all()
+        
+        # TAs: see courses they're assigned to
+        elif hasattr(user, 'taprofile'):
+            return user.taprofile.courses_assigned.all()
+        
+        # Students: see courses they're enrolled in
+        elif hasattr(user, 'student_profile'):
+            return user.student_profile.enrolled_courses.all()
+        
         return Course.objects.none()
 
     # List students in a course 
@@ -740,11 +750,54 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'facultyprofile'):
             return Submission.objects.filter(assignment__uploaded_by=user.facultyprofile)
         
+        # TAs: see submissions for assignments in courses they're assigned to
+        elif hasattr(user, 'taprofile'):
+            ta_courses = user.taprofile.courses_assigned.all()
+            return Submission.objects.filter(assignment__course__in=ta_courses)
+        
         # Students: see their own submissions
         elif hasattr(user, 'student_profile'):
             return Submission.objects.filter(student=user.student_profile)
         
         return Submission.objects.none()
+
+    # Grade submission (for TAs and Faculty)
+    @action(detail=True, methods=['patch'], parser_classes=[JSONParser])
+    def grade(self, request, pk=None):
+        submission = self.get_object()
+        user = request.user
+        
+        # Only faculty and TAs can grade
+        if not (hasattr(user, 'facultyprofile') or hasattr(user, 'taprofile')):
+            return Response(
+                {"error": "Only faculty and TAs can grade submissions"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        grade = request.data.get('grade')
+        feedback = request.data.get('feedback', '')
+        
+        if grade is None:
+            return Response({"error": "Grade is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            grade = float(grade)
+            max_points = submission.assignment.max_points or 100
+            if grade < 0 or grade > max_points:
+                return Response(
+                    {"error": f"Grade must be between 0 and {max_points}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+        except ValueError:
+            return Response({"error": "Invalid grade value"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        submission.grade = grade
+        submission.feedback = feedback
+        submission.status = 'graded'
+        submission.save()
+        
+        serializer = self.get_serializer(submission)
+        return Response(serializer.data)
 
     # Approve/reject late submission and grade
     @action(detail=True, methods=['post', 'patch'], parser_classes=[JSONParser, MultiPartParser, FormParser])
@@ -780,6 +833,11 @@ class AssignmentViewSet(viewsets.ModelViewSet):
         # Faculty: see assignments they uploaded
         if hasattr(user, 'facultyprofile'):
             return Assignment.objects.filter(uploaded_by=user.facultyprofile)
+        
+        # TAs: see assignments for courses they're assigned to
+        elif hasattr(user, 'taprofile'):
+            ta_courses = user.taprofile.courses_assigned.all()
+            return Assignment.objects.filter(course__in=ta_courses)
         
         # Students: see assignments for their enrolled courses
         elif hasattr(user, 'student_profile'):
@@ -859,10 +917,42 @@ class TATaskViewSet(viewsets.ModelViewSet):
     queryset = TATask.objects.all()
 
     def get_queryset(self):
-        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
-        if faculty_profile:
-            return TATask.objects.filter(assigned_by=faculty_profile)
+        user = self.request.user
+        
+        # Faculty: see tasks they assigned
+        if hasattr(user, 'facultyprofile'):
+            return TATask.objects.filter(assigned_by=user.facultyprofile)
+        
+        # TAs: see tasks assigned to them
+        elif hasattr(user, 'taprofile'):
+            return TATask.objects.filter(ta=user.taprofile)
+        
         return TATask.objects.none()
+    
+    @action(detail=True, methods=['patch'], parser_classes=[JSONParser])
+    def update_status(self, request, pk=None):
+        """Allow TAs to update task status and completion notes"""
+        task = self.get_object()
+        
+        # Only TAs can update their own tasks
+        if hasattr(request.user, 'taprofile') and task.ta == request.user.taprofile:
+            status_val = request.data.get('status')
+            completion_notes = request.data.get('completion_notes')
+            
+            if status_val and status_val in ['pending', 'in_progress', 'completed']:
+                task.status = status_val
+            
+            if completion_notes is not None:
+                task.completion_notes = completion_notes
+            
+            task.save()
+            serializer = self.get_serializer(task)
+            return Response(serializer.data)
+        
+        return Response(
+            {'error': 'You can only update your own tasks'},
+            status=status.HTTP_403_FORBIDDEN
+        )
 
 
 # ------------------ Admin Course ViewSet ------------------

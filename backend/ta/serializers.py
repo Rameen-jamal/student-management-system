@@ -4,13 +4,39 @@ from .models import TAProfile
 from core.models import Course
 from accounts.models import User
 
+class CourseMinimalSerializer(serializers.ModelSerializer):
+    """Minimal course info for TA dashboard"""
+    faculty_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Course
+        fields = ['id', 'code', 'name', 'semester', 'credit_hours', 'faculty_name']
+    
+    def get_faculty_name(self, obj):
+        if obj.faculty:
+            return f"{obj.faculty.first_name} {obj.faculty.last_name}"
+        return "No Faculty Assigned"
+
 class TAProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
-    courses_assigned = serializers.PrimaryKeyRelatedField(queryset=Course.objects.all(), many=True)
+    user = UserSerializer(read_only=True)
+    courses_assigned = serializers.PrimaryKeyRelatedField(
+        queryset=Course.objects.all(), 
+        many=True,
+        required=False
+    )
+    courses_detail = CourseMinimalSerializer(source='courses_assigned', many=True, read_only=True)
+    full_name = serializers.SerializerMethodField()
 
     class Meta:
         model = TAProfile
-        fields = '__all__'
+        fields = [
+            'id', 'user', 'full_name', 'first_name', 'last_name', 
+            'department', 'contact_number', 'ta_tasks',
+            'courses_assigned', 'courses_detail'
+        ]
+    
+    def get_full_name(self, obj):
+        return f"{obj.first_name} {obj.last_name}"
 
     def create(self, validated_data):
         user_data = validated_data.pop('user')

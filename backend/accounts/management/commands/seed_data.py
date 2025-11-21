@@ -525,7 +525,16 @@ class Command(BaseCommand):
             Submission.objects.create(assignment=assignments[7], student=student_profiles[9], grade=84, feedback='Good effort, minor memory leak issues'),
         ])
         
-        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(submissions)} submissions'))
+        # Add some UNGRADED submissions for TA to grade
+        submissions.extend([
+            Submission.objects.create(assignment=assignments[0], student=student_profiles[2], status='pending'),  # ER Diagram - needs grading
+            Submission.objects.create(assignment=assignments[0], student=student_profiles[3], status='pending'),  # ER Diagram - needs grading
+            Submission.objects.create(assignment=assignments[1], student=student_profiles[0], status='pending'),  # Normalization - needs grading
+            Submission.objects.create(assignment=assignments[3], student=student_profiles[2], status='pending'),  # Process Scheduling - needs grading
+            Submission.objects.create(assignment=assignments[7], student=student_profiles[3], status='pending'),  # Linked Lists - needs grading
+        ])
+        
+        self.stdout.write(self.style.SUCCESS(f'✓ Created {len(submissions)} submissions (including {5} ungraded)'))
 
         # Create Quizzes
         self.stdout.write('Creating quizzes...')
@@ -685,6 +694,16 @@ class Command(BaseCommand):
             attendance_count += 1
         
         self.stdout.write(self.style.SUCCESS(f'✓ Created {attendance_count} attendance records'))
+
+        # Assign TAs to Courses
+        self.stdout.write('Assigning TAs to courses...')
+        # TA1 - Computer Science courses
+        ta_profiles[0].courses_assigned.add(courses[0], courses[1], courses[3])  # CS-302, CS-303, CS-201
+        # TA2 - More CS courses
+        ta_profiles[1].courses_assigned.add(courses[0], courses[5], courses[6])  # CS-302, CS-304, CS-202
+        # TA3 - SE and advanced CS courses
+        ta_profiles[2].courses_assigned.add(courses[2], courses[4], courses[7])  # SE-301, CS-401, CS-402
+        self.stdout.write(self.style.SUCCESS(f'✓ Assigned TAs to courses'))
 
         # Create TA Tasks
         self.stdout.write('Creating TA tasks...')
