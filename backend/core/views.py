@@ -713,6 +713,92 @@ class CourseViewSet(viewsets.ModelViewSet):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
+    # Assign TA to course
+    @action(detail=True, methods=['post'], parser_classes=[JSONParser])
+    def assign_ta(self, request, pk=None):
+        course = self.get_object()
+        faculty_profile = getattr(request.user, 'facultyprofile', None)
+        
+        # Check if user is faculty and owns this course
+        if not faculty_profile:
+            return Response(
+                {"error": "Only faculty can assign TAs"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if course not in faculty_profile.courses.all():
+            return Response(
+                {"error": "You can only assign TAs to your own courses"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        ta_id = request.data.get('ta_id')
+        if not ta_id:
+            return Response({"error": "TA ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            from ta.models import TAProfile
+            ta_profile = TAProfile.objects.get(id=ta_id)
+            
+            # Add course to TA's assigned courses
+            ta_profile.courses_assigned.add(course)
+            
+            return Response(
+                {"message": f"TA {ta_profile.first_name} {ta_profile.last_name} assigned to {course.code} successfully"},
+                status=status.HTTP_200_OK
+            )
+        except TAProfile.DoesNotExist:
+            return Response({"error": "TA not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    # Remove TA from course
+    @action(detail=True, methods=['post'], parser_classes=[JSONParser])
+    def remove_ta(self, request, pk=None):
+        course = self.get_object()
+        faculty_profile = getattr(request.user, 'facultyprofile', None)
+        
+        # Check if user is faculty and owns this course
+        if not faculty_profile:
+            return Response(
+                {"error": "Only faculty can remove TAs"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        if course not in faculty_profile.courses.all():
+            return Response(
+                {"error": "You can only remove TAs from your own courses"},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        ta_id = request.data.get('ta_id')
+        if not ta_id:
+            return Response({"error": "TA ID is required"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        try:
+            from ta.models import TAProfile
+            ta_profile = TAProfile.objects.get(id=ta_id)
+            
+            # Check if TA is actually assigned to this course
+            if course not in ta_profile.courses_assigned.all():
+                return Response(
+                    {"error": "TA is not assigned to this course"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Remove course from TA's assigned courses
+            ta_profile.courses_assigned.remove(course)
+            
+            return Response(
+                {"message": f"TA {ta_profile.first_name} {ta_profile.last_name} removed from {course.code} successfully"},
+                status=status.HTTP_200_OK
+            )
+        except TAProfile.DoesNotExist:
+            return Response({"error": "TA not found"}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to remove TA: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
     # Send message to a student
     @action(detail=True, methods=['post'], parser_classes=[JSONParser])
     def message_student(self, request, pk=None):

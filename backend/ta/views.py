@@ -25,13 +25,9 @@ class TAProfileViewSet(viewsets.ModelViewSet):
         if user.role == 'ta':
             return TAProfile.objects.filter(user=user)
         
-        # Faculty can see TAs assigned to their courses
+        # Faculty can see all TAs (to be able to assign them)
         if user.role == 'faculty':
-            faculty_profile = getattr(user, 'facultyprofile', None)
-            if faculty_profile:
-                return TAProfile.objects.filter(
-                    courses_assigned__in=faculty_profile.courses.all()
-                ).distinct()
+            return TAProfile.objects.all()
         
         return TAProfile.objects.none()
 

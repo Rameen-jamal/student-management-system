@@ -7,8 +7,168 @@ import {
     User, BookOpen, Calendar, Award, FileText, ClipboardCheck, Clock, Users, LogOut, 
     Search, Filter, X, CheckCircle, AlertCircle, Clock3, TrendingUp, GraduationCap, 
     Mail, Phone, MapPin, Building, Hash, Target, MessageSquare, ChevronDown, Plus,
-    Upload, Send, Edit, Briefcase, Save, FileQuestion, Timer
+    Upload, Send, Edit, Briefcase, Save, FileQuestion, Timer, XCircle
 } from 'lucide-react';
+
+// Dialog Component
+const Dialog = ({ isOpen, onClose, title, message, type = 'info', onConfirm }) => {
+    if (!isOpen) return null;
+
+    const getIcon = () => {
+        switch (type) {
+            case 'success':
+                return <CheckCircle size={48} color="#10B981" />;
+            case 'error':
+                return <XCircle size={48} color="#EF4444" />;
+            case 'warning':
+                return <AlertCircle size={48} color="#F59E0B" />;
+            case 'confirm':
+                return <AlertCircle size={48} color="#4F46E5" />;
+            default:
+                return <AlertCircle size={48} color="#4F46E5" />;
+        }
+    };
+
+    const getColor = () => {
+        switch (type) {
+            case 'success': return '#10B981';
+            case 'error': return '#EF4444';
+            case 'warning': return '#F59E0B';
+            default: return '#4F46E5';
+        }
+    };
+
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+        }}>
+            <div style={{
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                padding: '2rem',
+                maxWidth: '450px',
+                width: '100%',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                position: 'relative'
+            }}>
+                <button
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#6B7280',
+                        padding: '0.25rem'
+                    }}
+                >
+                    <X size={20} />
+                </button>
+
+                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                    {getIcon()}
+                </div>
+
+                {title && (
+                    <h3 style={{
+                        margin: '0 0 1rem 0',
+                        fontSize: '1.25rem',
+                        fontWeight: '700',
+                        color: '#1F2937',
+                        textAlign: 'center'
+                    }}>
+                        {title}
+                    </h3>
+                )}
+
+                <p style={{
+                    margin: '0 0 1.5rem 0',
+                    fontSize: '1rem',
+                    color: '#6B7280',
+                    textAlign: 'center',
+                    lineHeight: '1.5'
+                }}>
+                    {message}
+                </p>
+
+                <div style={{
+                    display: 'flex',
+                    gap: '0.75rem',
+                    justifyContent: 'center'
+                }}>
+                    {type === 'confirm' ? (
+                        <>
+                            <button
+                                onClick={onClose}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    backgroundColor: '#F3F4F6',
+                                    color: '#1F2937',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: '600',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    onConfirm();
+                                    onClose();
+                                }}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    backgroundColor: getColor(),
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: '600',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Confirm
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={onClose}
+                            style={{
+                                padding: '0.75rem 2rem',
+                                backgroundColor: getColor(),
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            OK
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // Color palette
 const colors = {
@@ -265,6 +425,38 @@ const styles = {
         borderRadius: '8px',
         border: `1px solid ${colors.border}`,
         marginBottom: '0.5rem'
+    },
+    modal: {
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        zIndex: 1000
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        borderRadius: '12px',
+        padding: '2rem',
+        maxWidth: '500px',
+        width: '90%',
+        maxHeight: '90vh',
+        overflow: 'auto',
+        boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+    },
+    closeBtn: {
+        background: 'none',
+        border: 'none',
+        cursor: 'pointer',
+        padding: '0.5rem',
+        color: colors.textSecondary,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center'
     }
 };
 
@@ -277,9 +469,30 @@ function FacultyDashboard() {
     const [students, setStudents] = useState([]);
     const [submissions, setSubmissions] = useState([]); // NEW: for Grades tab
     const [quizGrades, setQuizGrades] = useState([]); // NEW: for Grades tab
+    const [tas, setTAs] = useState([]); // NEW: for TAs tab
     
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
+    const [showTAAssignModal, setShowTAAssignModal] = useState(false);
+    const [selectedTAForAssign, setSelectedTAForAssign] = useState(null);
+    const [selectedCourseForTA, setSelectedCourseForTA] = useState('');
+    
+    // Dialog state
+    const [dialog, setDialog] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info',
+        onConfirm: null
+    });
+
+    const showDialog = (title, message, type = 'info', onConfirm = null) => {
+        setDialog({ isOpen: true, title, message, type, onConfirm });
+    };
+
+    const closeDialog = () => {
+        setDialog({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
+    };
 
     // Forms state
     const [showAssignmentForm, setShowAssignmentForm] = useState(false);
@@ -326,7 +539,7 @@ function FacultyDashboard() {
             // Updated Promise.all to fetch new data for the new tabs
             const [
                 facultyRes, coursesRes, assignmentsRes, quizzesRes, studentsRes, 
-                submissionsRes, quizGradesRes 
+                submissionsRes, quizGradesRes, tasRes
             ] = await Promise.all([
                 axios.get(API_ENDPOINTS.FACULTY, { headers }),
                 axios.get(API_ENDPOINTS.COURSES, { headers }),
@@ -335,6 +548,7 @@ function FacultyDashboard() {
                 axios.get(API_ENDPOINTS.STUDENTS, { headers }),
                 axios.get(API_ENDPOINTS.SUBMISSIONS, { headers }), // For Grades (Assignments)
                 axios.get(API_ENDPOINTS.QUIZ_GRADES, { headers }), // For Grades (Quizzes)
+                axios.get(API_ENDPOINTS.TAS, { headers }), // For TAs tab
             ]);
 
             if (facultyRes.data.length > 0) setFaculty(facultyRes.data[0]);
@@ -344,6 +558,7 @@ function FacultyDashboard() {
             setStudents(studentsRes.data);
             setSubmissions(submissionsRes.data); 
             setQuizGrades(quizGradesRes.data);
+            setTAs(tasRes.data);
 
             // Initialize announcement form toggles per course
             const annFormObj = {};
@@ -403,7 +618,7 @@ function FacultyDashboard() {
     const handleAttendanceSubmit = async (e) => {
         e.preventDefault();
         if (!selectedCourseIdForAttendance) {
-            alert("Please select a course first.");
+            showDialog('Warning', 'Please select a course first.', 'warning');
             return;
         }
 
@@ -414,14 +629,14 @@ function FacultyDashboard() {
                 student_ids: students.filter(s => attendanceMark[s.id]).map(s => s.id) 
             }, { headers });
 
-            alert(`Attendance marked successfully for Course ID: ${selectedCourseIdForAttendance}!`);
+            showDialog('Success', 'Attendance marked successfully!', 'success');
             // Refresh attendance history
             fetchAttendanceHistory(selectedCourseIdForAttendance);
             setAttendanceMark({}); // Reset marks
             fetchFacultyData(); // Refresh data
         } catch(err) {
             console.error("Error marking attendance:", err.response ? err.response.data : err);
-            alert("Failed to mark attendance. Check console for details.");
+            showDialog('Error', 'Failed to mark attendance. Please try again.', 'error');
         }
     };
     
@@ -475,7 +690,7 @@ const handleAnnouncementSubmit = async (e, courseId) => {
         fetchFacultyData();
     } catch(err) {
         console.error(err);
-        alert("Failed to post announcement. Check console for details.");
+        showDialog('Error', 'Failed to post announcement. Please try again.', 'error');
     }
 };
 
@@ -494,10 +709,10 @@ const handleGradeSubmission = async (submissionId) => {
         setEditingSubmission(null);
         setGradeFormData({ grade: '', feedback: '' });
         fetchFacultyData();
-        alert('Grade submitted successfully!');
+        showDialog('Success', 'Grade submitted successfully!', 'success');
     } catch(err) {
         console.error(err);
-        alert('Failed to submit grade. Check console for details.');
+        showDialog('Error', 'Failed to submit grade. Please try again.', 'error');
     }
 };
 
@@ -520,23 +735,31 @@ const handleUpdateQuizGrade = async (quizGradeId) => {
         setEditingQuizGrade(null);
         setQuizGradeFormData({ marks_obtained: '', remarks: '' });
         fetchFacultyData();
-        alert('Quiz grade updated successfully!');
+        showDialog('Success', 'Quiz grade updated successfully!', 'success');
     } catch(err) {
         console.error(err);
-        alert('Failed to update quiz grade. Check console for details.');
+        showDialog('Error', 'Failed to update quiz grade. Please try again.', 'error');
     }
 };
 
 // Bulk create quiz grades for all students
 const handleCreateQuizGrades = async (quizId) => {
-    if (!window.confirm('Create grade records for all enrolled students in this quiz?')) {
-        return;
-    }
+    showDialog(
+        'Confirm',
+        'Create grade records for all enrolled students in this quiz?',
+        'confirm',
+        async () => {
+            await performCreateQuizGrades(quizId);
+        }
+    );
+};
+
+const performCreateQuizGrades = async (quizId) => {
     
     try {
         const quiz = quizzes.find(q => q.id === quizId);
         if (!quiz) {
-            alert('Quiz not found');
+            showDialog('Error', 'Quiz not found', 'error');
             return;
         }
 
@@ -572,10 +795,65 @@ const handleCreateQuizGrades = async (quizId) => {
         }
 
         fetchFacultyData();
-        alert(`Created ${created} quiz grade records. Skipped ${skipped} (already exist).`);
+        showDialog('Success', `Created ${created} quiz grade records. Skipped ${skipped} (already exist).`, 'success');
     } catch(err) {
         console.error(err);
-        alert('Failed to create quiz grades. Check console for details.');
+        showDialog('Error', 'Failed to create quiz grades. Please try again.', 'error');
+    }
+};
+
+const handleAssignTA = async () => {
+    const token = localStorage.getItem("access_token");
+    if (!selectedTAForAssign || !selectedCourseForTA) {
+        showDialog('Warning', 'Please select both TA and course', 'warning');
+        return;
+    }
+    try {
+        await axios.post(
+            `${API_ENDPOINTS.COURSES}${selectedCourseForTA}/assign_ta/`,
+            { ta_id: selectedTAForAssign },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setShowTAAssignModal(false);
+        setSelectedTAForAssign(null);
+        setSelectedCourseForTA('');
+        fetchFacultyData();
+        showDialog('Success', 'TA assigned successfully!', 'success');
+    } catch (err) {
+        console.error('Error assigning TA:', err);
+        showDialog('Error', err.response?.data?.error || 'Failed to assign TA', 'error');
+    }
+};
+
+const handleRemoveTA = (taId, courseId, taName, courseName) => {
+    showDialog(
+        'Confirm',
+        `Remove ${taName} from ${courseName}?`,
+        'confirm',
+        async () => {
+            await performRemoveTA(taId, courseId);
+        }
+    );
+};
+
+const performRemoveTA = async (taId, courseId) => {
+    const token = localStorage.getItem("access_token");
+    try {
+        console.log('Removing TA:', { taId, courseId, endpoint: `${API_ENDPOINTS.COURSES}${courseId}/remove_ta/` });
+        const response = await axios.post(
+            `${API_ENDPOINTS.COURSES}${courseId}/remove_ta/`,
+            { ta_id: taId },
+            { headers: { Authorization: `Bearer ${token}` } }
+        );
+        console.log('Remove TA response:', response.data);
+        fetchFacultyData();
+        showDialog('Success', 'TA removed successfully!', 'success');
+    } catch (err) {
+        console.error('Error removing TA:', err);
+        console.error('Error response:', err.response?.data);
+        console.error('Error status:', err.response?.status);
+        const errorMsg = err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to remove TA';
+        showDialog('Error', errorMsg, 'error');
     }
 };
 
@@ -771,6 +1049,7 @@ const handleCreateQuizGrades = async (quizId) => {
                         {name: 'assignments', icon: FileText},
                         {name: 'quizzes', icon: ClipboardCheck},
                         {name: 'students', icon: Users},
+                        {name: 'tas', icon: Briefcase},
                         {name: 'attendance', icon: Calendar},
                         {name: 'grades', icon: Award},
                         {name: 'materials', icon: Upload}
@@ -1309,6 +1588,144 @@ const handleCreateQuizGrades = async (quizId) => {
                                 ))}
                             </div>
                         ) : <div style={styles.emptyState}>No students found</div>}
+                    </div>
+                )}
+
+                {/* --- TAs Tab --- */}
+                {activeTab === 'tas' && (
+                    <div style={styles.section}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+                            <h3 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                <Briefcase size={24} />
+                                Teaching Assistants
+                            </h3>
+                            <button 
+                                onClick={() => setShowTAAssignModal(true)} 
+                                style={styles.button}
+                            >
+                                <Plus size={18} />
+                                Assign TA to Course
+                            </button>
+                        </div>
+
+                        {tas.length > 0 ? (
+                            <div style={{display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1rem'}}>
+                                {tas.map(ta => {
+                                    const assignedToMyCourses = ta.courses_assigned?.filter(courseId => 
+                                        courses.some(c => c.id === courseId)
+                                    ) || [];
+                                    const isAssignedToOthers = ta.courses_assigned?.some(courseId => 
+                                        !courses.some(c => c.id === courseId)
+                                    );
+
+                                    return (
+                                        <div key={ta.id} style={{
+                                            ...styles.card,
+                                            opacity: isAssignedToOthers && assignedToMyCourses.length === 0 ? 0.6 : 1,
+                                            border: assignedToMyCourses.length > 0 ? `2px solid ${colors.success}` : `1px solid ${colors.border}`
+                                        }}>
+                                            <div style={{display: 'flex', alignItems: 'flex-start', gap: '1rem'}}>
+                                                <div style={{
+                                                    width: '50px',
+                                                    height: '50px',
+                                                    borderRadius: '50%',
+                                                    background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`,
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    color: 'white',
+                                                    fontSize: '1.25rem',
+                                                    fontWeight: '700'
+                                                }}>
+                                                    {ta.first_name?.charAt(0)}{ta.last_name?.charAt(0)}
+                                                </div>
+                                                <div style={{flex: 1}}>
+                                                    <h4 style={{margin: 0, marginBottom: '0.25rem'}}>
+                                                        {ta.first_name} {ta.last_name}
+                                                    </h4>
+                                                    <div style={{fontSize: '0.875rem', color: colors.textSecondary, marginBottom: '0.5rem'}}>
+                                                        <Mail size={14} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem'}} />
+                                                        {ta.user?.email || 'N/A'}
+                                                    </div>
+                                                    <div style={{fontSize: '0.875rem', color: colors.textSecondary}}>
+                                                        <Building size={14} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem'}} />
+                                                        {ta.department}
+                                                    </div>
+                                                    {ta.contact_number && (
+                                                        <div style={{fontSize: '0.875rem', color: colors.textSecondary, marginTop: '0.25rem'}}>
+                                                            <Phone size={14} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem'}} />
+                                                            {ta.contact_number}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            
+                                            <div style={{marginTop: '1rem', paddingTop: '1rem', borderTop: `1px solid ${colors.border}`}}>
+                                                {assignedToMyCourses.length > 0 ? (
+                                                    <div>
+                                                        <div style={{fontSize: '0.875rem', fontWeight: '600', color: colors.success, marginBottom: '0.5rem'}}>
+                                                            Assigned to your courses:
+                                                        </div>
+                                                        {assignedToMyCourses.map(courseId => {
+                                                            const course = courses.find(c => c.id === courseId);
+                                                            return course ? (
+                                                                <div key={courseId} style={{
+                                                                    display: 'flex',
+                                                                    justifyContent: 'space-between',
+                                                                    alignItems: 'center',
+                                                                    fontSize: '0.875rem',
+                                                                    padding: '0.5rem',
+                                                                    backgroundColor: colors.light,
+                                                                    borderRadius: '4px',
+                                                                    marginBottom: '0.5rem'
+                                                                }}>
+                                                                    <span>{course.code} - {course.name}</span>
+                                                                    <button
+                                                                        onClick={() => handleRemoveTA(
+                                                                            ta.id,
+                                                                            courseId,
+                                                                            `${ta.first_name} ${ta.last_name}`,
+                                                                            course.code
+                                                                        )}
+                                                                        style={{
+                                                                            padding: '0.25rem 0.5rem',
+                                                                            backgroundColor: colors.danger,
+                                                                            color: 'white',
+                                                                            border: 'none',
+                                                                            borderRadius: '4px',
+                                                                            cursor: 'pointer',
+                                                                            fontSize: '0.75rem',
+                                                                            fontWeight: '600',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '0.25rem'
+                                                                        }}
+                                                                    >
+                                                                        <X size={12} />
+                                                                        Remove
+                                                                    </button>
+                                                                </div>
+                                                            ) : null;
+                                                        })}
+                                                    </div>
+                                                ) : isAssignedToOthers ? (
+                                                    <div style={{fontSize: '0.875rem', color: colors.warning, fontWeight: '600'}}>
+                                                        <AlertCircle size={14} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem'}} />
+                                                        Assigned to other faculty
+                                                    </div>
+                                                ) : (
+                                                    <div style={{fontSize: '0.875rem', color: colors.textSecondary}}>
+                                                        Not assigned to any course
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        ) : (
+                            <div style={styles.emptyState}>No TAs available</div>
+                        )}
                     </div>
                 )}
 
@@ -1998,6 +2415,91 @@ const handleCreateQuizGrades = async (quizId) => {
                         ))}
                     </div>
                 )}
+
+                {/* TA Assignment Modal */}
+                {showTAAssignModal && (
+                    <div style={styles.modal} onClick={() => setShowTAAssignModal(false)}>
+                        <div style={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+                            <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+                                <h3 style={{margin: 0}}>Assign TA to Course</h3>
+                                <button onClick={() => setShowTAAssignModal(false)} style={styles.closeBtn}>
+                                    <X size={24} />
+                                </button>
+                            </div>
+
+                            <div style={{marginBottom: '1rem'}}>
+                                <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: '600'}}>
+                                    Select TA:
+                                </label>
+                                <select
+                                    value={selectedTAForAssign || ''}
+                                    onChange={(e) => setSelectedTAForAssign(e.target.value)}
+                                    style={{width: '100%', padding: '0.75rem', borderRadius: '8px', border: `1px solid ${colors.border}`}}
+                                >
+                                    <option value="">-- Select TA --</option>
+                                    {tas.filter(ta => {
+                                        // Show all TAs but indicate if already assigned to other faculty
+                                        return true;
+                                    }).map(ta => {
+                                        const assignedToOthers = ta.courses_assigned?.some(courseId => 
+                                            !courses.some(c => c.id === courseId)
+                                        );
+                                        return (
+                                            <option key={ta.id} value={ta.id}>
+                                                {ta.first_name} {ta.last_name} - {ta.department}
+                                                {assignedToOthers ? ' (Already assigned to other faculty)' : ''}
+                                            </option>
+                                        );
+                                    })}
+                                </select>
+                            </div>
+
+                            <div style={{marginBottom: '1.5rem'}}>
+                                <label style={{display: 'block', marginBottom: '0.5rem', fontWeight: '600'}}>
+                                    Select Course:
+                                </label>
+                                <select
+                                    value={selectedCourseForTA || ''}
+                                    onChange={(e) => setSelectedCourseForTA(e.target.value)}
+                                    style={{width: '100%', padding: '0.75rem', borderRadius: '8px', border: `1px solid ${colors.border}`}}
+                                >
+                                    <option value="">-- Select Course --</option>
+                                    {courses.map(course => (
+                                        <option key={course.id} value={course.id}>
+                                            {course.code} - {course.name}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+
+                            <div style={{display: 'flex', gap: '1rem', justifyContent: 'flex-end'}}>
+                                <button
+                                    onClick={() => setShowTAAssignModal(false)}
+                                    style={{...styles.button, backgroundColor: colors.border, color: colors.textPrimary}}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    onClick={handleAssignTA}
+                                    style={styles.button}
+                                >
+                                    <Plus size={18} />
+                                    Assign TA
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* Dialog Component */}
+                <Dialog
+                    isOpen={dialog.isOpen}
+                    onClose={closeDialog}
+                    title={dialog.title}
+                    message={dialog.message}
+                    type={dialog.type}
+                    onConfirm={dialog.onConfirm}
+                />
             </div>
         </div>
     );
