@@ -214,6 +214,66 @@ class Command(BaseCommand):
                 'year': 3,
                 'semester': 5,
                 'cgpa': 3.6
+            },
+            {
+                'username': 'student6',
+                'email': 'student6@fastflex.com',
+                'password': 'Student@123',
+                'first_name': 'Sara',
+                'last_name': 'Ali',
+                'enrollment_number': '23k-0006',
+                'department': 'Computer Science',
+                'year': 3,
+                'semester': 5,
+                'cgpa': 3.7
+            },
+            {
+                'username': 'student7',
+                'email': 'student7@fastflex.com',
+                'password': 'Student@123',
+                'first_name': 'Hassan',
+                'last_name': 'Raza',
+                'enrollment_number': '23k-0007',
+                'department': 'Computer Science',
+                'year': 2,
+                'semester': 3,
+                'cgpa': 3.4
+            },
+            {
+                'username': 'student8',
+                'email': 'student8@fastflex.com',
+                'password': 'Student@123',
+                'first_name': 'Mariam',
+                'last_name': 'Sheikh',
+                'enrollment_number': '23k-0008',
+                'department': 'Software Engineering',
+                'year': 4,
+                'semester': 7,
+                'cgpa': 3.85
+            },
+            {
+                'username': 'student9',
+                'email': 'student9@fastflex.com',
+                'password': 'Student@123',
+                'first_name': 'Omar',
+                'last_name': 'Farooq',
+                'enrollment_number': '23k-0009',
+                'department': 'Computer Science',
+                'year': 3,
+                'semester': 5,
+                'cgpa': 3.3
+            },
+            {
+                'username': 'student10',
+                'email': 'student10@fastflex.com',
+                'password': 'Student@123',
+                'first_name': 'Zainab',
+                'last_name': 'Hussain',
+                'enrollment_number': '23k-0010',
+                'department': 'Computer Science',
+                'year': 2,
+                'semester': 3,
+                'cgpa': 3.65
             }
         ]
 
@@ -282,6 +342,30 @@ class Command(BaseCommand):
                 'semester': 7,
                 'credit_hours': 3,
                 'faculty': faculty_profiles[2]
+            },
+            {
+                'name': 'Computer Networks',
+                'code': 'CS-304',
+                'description': 'Network protocols, TCP/IP, and network security',
+                'semester': 5,
+                'credit_hours': 3,
+                'faculty': faculty_profiles[1]
+            },
+            {
+                'name': 'Object Oriented Programming',
+                'code': 'CS-202',
+                'description': 'OOP concepts with Java and design patterns',
+                'semester': 3,
+                'credit_hours': 4,
+                'faculty': faculty_profiles[0]
+            },
+            {
+                'name': 'Artificial Intelligence',
+                'code': 'CS-402',
+                'description': 'Machine learning, neural networks, and AI algorithms',
+                'semester': 7,
+                'credit_hours': 4,
+                'faculty': faculty_profiles[2]
             }
         ]
 
@@ -300,32 +384,32 @@ class Command(BaseCommand):
 
         # Create Enrollments
         self.stdout.write('Creating enrollments...')
-        enrollments = [
-            # Student 1 (semester 5)
-            Enrollment.objects.create(student=student_profiles[0], course=courses[0], status='active'),
-            Enrollment.objects.create(student=student_profiles[0], course=courses[1], status='active'),
-            Enrollment.objects.create(student=student_profiles[0], course=courses[2], status='active'),
-            
-            # Student 2 (semester 5)
-            Enrollment.objects.create(student=student_profiles[1], course=courses[0], status='active'),
-            Enrollment.objects.create(student=student_profiles[1], course=courses[1], status='active'),
-            Enrollment.objects.create(student=student_profiles[1], course=courses[2], status='active'),
-            
-            # Student 3 (semester 3)
-            Enrollment.objects.create(student=student_profiles[2], course=courses[3], status='active'),
-            
-            # Student 4 (semester 7)
-            Enrollment.objects.create(student=student_profiles[3], course=courses[4], status='active'),
-            
-            # Student 5 (semester 5)
-            Enrollment.objects.create(student=student_profiles[4], course=courses[0], status='active'),
-            Enrollment.objects.create(student=student_profiles[4], course=courses[2], status='active'),
-        ]
+        enrollments = []
+        
+        # Semester 5 students (students 0,1,4,5,8) - 4 courses each
+        semester_5_courses = [courses[0], courses[1], courses[2], courses[5]]  # CS-302, CS-303, SE-301, CS-304
+        for student in [student_profiles[0], student_profiles[1], student_profiles[4], student_profiles[5], student_profiles[8]]:
+            for course in semester_5_courses:
+                enrollments.append(Enrollment.objects.create(student=student, course=course, status='active'))
+        
+        # Semester 3 students (students 2,6,9) - 3 courses each
+        semester_3_courses = [courses[3], courses[6]]  # CS-201, CS-202
+        for student in [student_profiles[2], student_profiles[6], student_profiles[9]]:
+            for course in semester_3_courses:
+                enrollments.append(Enrollment.objects.create(student=student, course=course, status='active'))
+        
+        # Semester 7 students (students 3,7) - 3 courses each
+        semester_7_courses = [courses[4], courses[7]]  # CS-401, CS-402
+        for student in [student_profiles[3], student_profiles[7]]:
+            for course in semester_7_courses:
+                enrollments.append(Enrollment.objects.create(student=student, course=course, status='active'))
+        
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(enrollments)} enrollments'))
 
         # Create Assignments
         self.stdout.write('Creating assignments...')
         assignments = [
+            # Database Management Systems (CS-302)
             Assignment.objects.create(
                 title='Assignment 1 - ER Diagrams',
                 description='Create an Entity-Relationship diagram for a library management system',
@@ -343,6 +427,15 @@ class Command(BaseCommand):
                 uploaded_by=faculty_profiles[0]
             ),
             Assignment.objects.create(
+                title='Assignment 3 - Database Normalization',
+                description='Normalize the given database to 3NF',
+                course=courses[0],
+                due_date=timezone.now() + timedelta(days=21),
+                max_points=80,
+                uploaded_by=faculty_profiles[0]
+            ),
+            # Operating Systems (CS-303)
+            Assignment.objects.create(
                 title='Assignment 1 - Process Scheduling',
                 description='Implement different CPU scheduling algorithms',
                 course=courses[1],
@@ -351,6 +444,15 @@ class Command(BaseCommand):
                 uploaded_by=faculty_profiles[1]
             ),
             Assignment.objects.create(
+                title='Assignment 2 - Memory Management',
+                description='Simulate page replacement algorithms',
+                course=courses[1],
+                due_date=timezone.now() + timedelta(days=18),
+                max_points=100,
+                uploaded_by=faculty_profiles[1]
+            ),
+            # Software Engineering (SE-301)
+            Assignment.objects.create(
                 title='Project - Software Requirements',
                 description='Document complete SRS for your project',
                 course=courses[2],
@@ -358,80 +460,230 @@ class Command(BaseCommand):
                 max_points=150,
                 uploaded_by=faculty_profiles[2]
             ),
+            Assignment.objects.create(
+                title='Assignment - Use Case Diagrams',
+                description='Create use case diagrams for a banking system',
+                course=courses[2],
+                due_date=timezone.now() + timedelta(days=12),
+                max_points=80,
+                uploaded_by=faculty_profiles[2]
+            ),
+            # Data Structures (CS-201)
+            Assignment.objects.create(
+                title='Assignment 1 - Linked Lists',
+                description='Implement singly and doubly linked lists with all operations',
+                course=courses[3],
+                due_date=timezone.now() + timedelta(days=8),
+                max_points=100,
+                uploaded_by=faculty_profiles[0]
+            ),
+            Assignment.objects.create(
+                title='Assignment 2 - Trees and Graphs',
+                description='Implement BST and graph traversal algorithms',
+                course=courses[3],
+                due_date=timezone.now() + timedelta(days=15),
+                max_points=120,
+                uploaded_by=faculty_profiles[0]
+            ),
+            # Computer Networks (CS-304)
+            Assignment.objects.create(
+                title='Assignment - Network Protocols',
+                description='Analyze TCP/IP packet structure and implement basic socket programming',
+                course=courses[5],
+                due_date=timezone.now() + timedelta(days=16),
+                max_points=100,
+                uploaded_by=faculty_profiles[1]
+            ),
         ]
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(assignments)} assignments'))
 
         # Create Submissions
         self.stdout.write('Creating submissions...')
-        submissions = [
-            Submission.objects.create(
-                assignment=assignments[0],
-                student=student_profiles[0],
-                grade=85,
-                feedback='Good work, but needs more detail in relationships'
-            ),
-            Submission.objects.create(
-                assignment=assignments[0],
-                student=student_profiles[1],
-                grade=95,
-                feedback='Excellent ER diagram with proper normalization'
-            ),
-            Submission.objects.create(
-                assignment=assignments[0],
-                student=student_profiles[4],
-                grade=78,
-                feedback='Missing some important entities'
-            ),
-        ]
+        submissions = []
+        
+        # Assignment 1 (ER Diagrams) - CS-302 - Submissions from semester 5 students
+        submissions.extend([
+            Submission.objects.create(assignment=assignments[0], student=student_profiles[0], grade=85, feedback='Good work, but needs more detail in relationships'),
+            Submission.objects.create(assignment=assignments[0], student=student_profiles[1], grade=95, feedback='Excellent ER diagram with proper normalization'),
+            Submission.objects.create(assignment=assignments[0], student=student_profiles[4], grade=78, feedback='Missing some important entities'),
+            Submission.objects.create(assignment=assignments[0], student=student_profiles[5], grade=88, feedback='Well structured diagram'),
+            Submission.objects.create(assignment=assignments[0], student=student_profiles[8], grade=72, feedback='Needs improvement in cardinality'),
+        ])
+        
+        # Assignment 4 (Process Scheduling) - CS-303 - Submissions from semester 5 students
+        submissions.extend([
+            Submission.objects.create(assignment=assignments[3], student=student_profiles[0], grade=90, feedback='Excellent implementation of all algorithms'),
+            Submission.objects.create(assignment=assignments[3], student=student_profiles[1], grade=92, feedback='Perfect code with detailed comments'),
+            Submission.objects.create(assignment=assignments[3], student=student_profiles[4], grade=82, feedback='Good but missing FCFS implementation'),
+            Submission.objects.create(assignment=assignments[3], student=student_profiles[5], grade=86, feedback='Well done, minor bugs in Round Robin'),
+        ])
+        
+        # Assignment 7 (Linked Lists) - CS-201 - Submissions from semester 3 students
+        submissions.extend([
+            Submission.objects.create(assignment=assignments[7], student=student_profiles[2], grade=88, feedback='Good implementation'),
+            Submission.objects.create(assignment=assignments[7], student=student_profiles[6], grade=91, feedback='Excellent work with all edge cases handled'),
+            Submission.objects.create(assignment=assignments[7], student=student_profiles[9], grade=84, feedback='Good effort, minor memory leak issues'),
+        ])
+        
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(submissions)} submissions'))
 
         # Create Quizzes
         self.stdout.write('Creating quizzes...')
         quizzes = [
-            Quiz.objects.create(
-                title='Quiz 1 - Database Basics',
-                course=courses[0],
-                date=timezone.now() - timedelta(days=5),
-                max_marks=50
-            ),
-            Quiz.objects.create(
-                title='Quiz 2 - Normalization',
-                course=courses[0],
-                date=timezone.now() + timedelta(days=7),
-                max_marks=50
-            ),
-            Quiz.objects.create(
-                title='Midterm Quiz - OS Concepts',
-                course=courses[1],
-                date=timezone.now() + timedelta(days=3),
-                max_marks=100
-            ),
+            # Database Management Systems (CS-302)
+            Quiz.objects.create(title='Quiz 1 - Database Basics', course=courses[0], date=timezone.now() - timedelta(days=10), max_marks=50, duration_minutes=30),
+            Quiz.objects.create(title='Quiz 2 - SQL Fundamentals', course=courses[0], date=timezone.now() - timedelta(days=3), max_marks=50, duration_minutes=30),
+            Quiz.objects.create(title='Quiz 3 - Normalization', course=courses[0], date=timezone.now() + timedelta(days=7), max_marks=50, duration_minutes=30),
+            
+            # Operating Systems (CS-303)
+            Quiz.objects.create(title='Quiz 1 - OS Basics', course=courses[1], date=timezone.now() - timedelta(days=8), max_marks=40, duration_minutes=25),
+            Quiz.objects.create(title='Midterm Quiz - Process Management', course=courses[1], date=timezone.now() + timedelta(days=3), max_marks=100, duration_minutes=60),
+            
+            # Software Engineering (SE-301)
+            Quiz.objects.create(title='Quiz 1 - SDLC Models', course=courses[2], date=timezone.now() - timedelta(days=6), max_marks=40, duration_minutes=25),
+            Quiz.objects.create(title='Quiz 2 - Requirements Engineering', course=courses[2], date=timezone.now() + timedelta(days=10), max_marks=50, duration_minutes=30),
+            
+            # Data Structures (CS-201)
+            Quiz.objects.create(title='Quiz 1 - Arrays and Complexity', course=courses[3], date=timezone.now() - timedelta(days=5), max_marks=40, duration_minutes=25),
+            Quiz.objects.create(title='Quiz 2 - Linked Lists', course=courses[3], date=timezone.now() + timedelta(days=5), max_marks=50, duration_minutes=30),
+            
+            # Computer Networks (CS-304)
+            Quiz.objects.create(title='Quiz 1 - Network Fundamentals', course=courses[5], date=timezone.now() - timedelta(days=4), max_marks=45, duration_minutes=30),
         ]
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(quizzes)} quizzes'))
 
         # Create Quiz Grades
         self.stdout.write('Creating quiz grades...')
-        quiz_grades = [
-            QuizGrade.objects.create(quiz=quizzes[0], student=student_profiles[0], marks_obtained=42),
-            QuizGrade.objects.create(quiz=quizzes[0], student=student_profiles[1], marks_obtained=48),
-            QuizGrade.objects.create(quiz=quizzes[0], student=student_profiles[4], marks_obtained=38),
-        ]
+        quiz_grades = []
+        
+        # Quiz 1 - Database Basics (all semester 5 students)
+        quiz_grades.extend([
+            QuizGrade.objects.create(quiz=quizzes[0], student=student_profiles[0], marks_obtained=42, remarks='Good effort'),
+            QuizGrade.objects.create(quiz=quizzes[0], student=student_profiles[1], marks_obtained=48, remarks='Excellent performance'),
+            QuizGrade.objects.create(quiz=quizzes[0], student=student_profiles[4], marks_obtained=38, remarks='Need more practice'),
+            QuizGrade.objects.create(quiz=quizzes[0], student=student_profiles[5], marks_obtained=44, remarks='Well done'),
+            QuizGrade.objects.create(quiz=quizzes[0], student=student_profiles[8], marks_obtained=35, remarks='Improve on SQL'),
+        ])
+        
+        # Quiz 2 - SQL Fundamentals (semester 5 students)
+        quiz_grades.extend([
+            QuizGrade.objects.create(quiz=quizzes[1], student=student_profiles[0], marks_obtained=45, remarks='Much improved'),
+            QuizGrade.objects.create(quiz=quizzes[1], student=student_profiles[1], marks_obtained=50, remarks='Perfect score'),
+            QuizGrade.objects.create(quiz=quizzes[1], student=student_profiles[4], marks_obtained=40, remarks='Good progress'),
+            QuizGrade.objects.create(quiz=quizzes[1], student=student_profiles[5], marks_obtained=46, remarks='Excellent'),
+        ])
+        
+        # Quiz 1 - OS Basics (semester 5 students)
+        quiz_grades.extend([
+            QuizGrade.objects.create(quiz=quizzes[3], student=student_profiles[0], marks_obtained=36, remarks='Good understanding'),
+            QuizGrade.objects.create(quiz=quizzes[3], student=student_profiles[1], marks_obtained=38, remarks='Very good'),
+            QuizGrade.objects.create(quiz=quizzes[3], student=student_profiles[4], marks_obtained=32, remarks='Average'),
+            QuizGrade.objects.create(quiz=quizzes[3], student=student_profiles[8], marks_obtained=30, remarks='Need improvement'),
+        ])
+        
+        # Quiz 1 - SDLC Models (semester 5 students)
+        quiz_grades.extend([
+            QuizGrade.objects.create(quiz=quizzes[5], student=student_profiles[0], marks_obtained=35, remarks='Good'),
+            QuizGrade.objects.create(quiz=quizzes[5], student=student_profiles[1], marks_obtained=38, remarks='Excellent'),
+            QuizGrade.objects.create(quiz=quizzes[5], student=student_profiles[4], marks_obtained=33, remarks='Fair'),
+            QuizGrade.objects.create(quiz=quizzes[5], student=student_profiles[5], marks_obtained=37, remarks='Very good'),
+        ])
+        
+        # Quiz 1 - Arrays and Complexity (semester 3 students)
+        quiz_grades.extend([
+            QuizGrade.objects.create(quiz=quizzes[7], student=student_profiles[2], marks_obtained=34, remarks='Good work'),
+            QuizGrade.objects.create(quiz=quizzes[7], student=student_profiles[6], marks_obtained=38, remarks='Excellent'),
+            QuizGrade.objects.create(quiz=quizzes[7], student=student_profiles[9], marks_obtained=36, remarks='Well done'),
+        ])
+        
+        # Quiz 1 - Network Fundamentals (semester 5 students)
+        quiz_grades.extend([
+            QuizGrade.objects.create(quiz=quizzes[9], student=student_profiles[0], marks_obtained=40, remarks='Good understanding'),
+            QuizGrade.objects.create(quiz=quizzes[9], student=student_profiles[1], marks_obtained=43, remarks='Excellent'),
+            QuizGrade.objects.create(quiz=quizzes[9], student=student_profiles[5], marks_obtained=39, remarks='Well done'),
+        ])
+        
         self.stdout.write(self.style.SUCCESS(f'✓ Created {len(quiz_grades)} quiz grades'))
 
         # Create Attendance Records
         self.stdout.write('Creating attendance records...')
         attendance_count = 0
-        for i in range(10):  # 10 days of attendance
+        
+        # CS-302 (Database) - 15 days of attendance
+        for i in range(15):
             attendance = Attendance.objects.create(
                 course=courses[0],
-                marked_by=faculty_profiles[0]
+                marked_by=faculty_profiles[0],
+                date=timezone.now() - timedelta(days=15-i)
             )
-            # Add students present (student 1 and 2 always present, student 5 sometimes absent)
-            attendance.students_present.add(student_profiles[0])
-            attendance.students_present.add(student_profiles[1])
-            if i % 3 != 0:  # Student 5 absent every 3rd day
+            # Regular attendees
+            attendance.students_present.add(student_profiles[0], student_profiles[1], student_profiles[5])
+            # Student 4 - 80% attendance (absent every 5th class)
+            if i % 5 != 0:
                 attendance.students_present.add(student_profiles[4])
+            # Student 8 - 70% attendance (absent every 3rd class)
+            if i % 3 != 0:
+                attendance.students_present.add(student_profiles[8])
             attendance_count += 1
+        
+        # CS-303 (Operating Systems) - 12 days of attendance
+        for i in range(12):
+            attendance = Attendance.objects.create(
+                course=courses[1],
+                marked_by=faculty_profiles[1],
+                date=timezone.now() - timedelta(days=12-i)
+            )
+            attendance.students_present.add(student_profiles[0], student_profiles[1], student_profiles[4], student_profiles[5])
+            if i % 4 != 0:  # Student 8 absent every 4th class
+                attendance.students_present.add(student_profiles[8])
+            attendance_count += 1
+        
+        # SE-301 (Software Engineering) - 10 days of attendance
+        for i in range(10):
+            attendance = Attendance.objects.create(
+                course=courses[2],
+                marked_by=faculty_profiles[2],
+                date=timezone.now() - timedelta(days=10-i)
+            )
+            attendance.students_present.add(student_profiles[0], student_profiles[1], student_profiles[4], student_profiles[5])
+            if i % 5 != 0:
+                attendance.students_present.add(student_profiles[8])
+            attendance_count += 1
+        
+        # CS-201 (Data Structures) - 12 days of attendance for semester 3
+        for i in range(12):
+            attendance = Attendance.objects.create(
+                course=courses[3],
+                marked_by=faculty_profiles[0],
+                date=timezone.now() - timedelta(days=12-i)
+            )
+            attendance.students_present.add(student_profiles[2], student_profiles[6], student_profiles[9])
+            attendance_count += 1
+        
+        # CS-304 (Computer Networks) - 10 days of attendance
+        for i in range(10):
+            attendance = Attendance.objects.create(
+                course=courses[5],
+                marked_by=faculty_profiles[1],
+                date=timezone.now() - timedelta(days=10-i)
+            )
+            attendance.students_present.add(student_profiles[0], student_profiles[1], student_profiles[5])
+            if i % 3 != 0:
+                attendance.students_present.add(student_profiles[4], student_profiles[8])
+            attendance_count += 1
+        
+        # CS-202 (OOP) - 10 days of attendance for semester 3
+        for i in range(10):
+            attendance = Attendance.objects.create(
+                course=courses[6],
+                marked_by=faculty_profiles[0],
+                date=timezone.now() - timedelta(days=10-i)
+            )
+            attendance.students_present.add(student_profiles[2], student_profiles[9])
+            if i % 4 != 0:  # Student 6 occasionally absent
+                attendance.students_present.add(student_profiles[6])
+            attendance_count += 1
+        
         self.stdout.write(self.style.SUCCESS(f'✓ Created {attendance_count} attendance records'))
 
         # Create TA Tasks
