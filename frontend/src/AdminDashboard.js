@@ -472,6 +472,12 @@ function AdminDashboard() {
     const [activeTab, setActiveTab] = useState("users");
     const [loading, setLoading] = useState(true);
 
+    // Helper function to get semester name
+    const getSemesterName = (semesterNum) => {
+        const semesters = { 1: "Fall", 2: "Spring", 3: "Summer" };
+        return semesters[semesterNum] || `Semester ${semesterNum}`;
+    };
+
     const [users, setUsers] = useState([]);
     const [courses, setCourses] = useState([]);
     const [students, setStudents] = useState([]);
@@ -480,8 +486,8 @@ function AdminDashboard() {
     const [payments, setPayments] = useState([]);
     const [enrollments, setEnrollments] = useState([]);
 
-    const [newUser, setNewUser] = useState({ username: "", password: "", role: "student" });
-    const [newCourse, setNewCourse] = useState({ code: "", name: "", credit_hours: 3, semester: "Fall" });
+    const [newUser, setNewUser] = useState({ username: "", password: "", role: "student", first_name: "", last_name: "", email: "", department: "Computer Science" });
+    const [newCourse, setNewCourse] = useState({ code: "", name: "", credit_hours: 3, semester: 1 });
     const [newFeeRecord, setNewFeeRecord] = useState({ 
         student: "", 
         semester: 1, 
@@ -577,17 +583,21 @@ function AdminDashboard() {
         e.preventDefault();
         try {
             await axios.post(API_ENDPOINTS.ADMIN_USERS, newUser, { headers });
-            setNewUser({ username: "", password: "", role: "student" });
+            setNewUser({ username: "", password: "", role: "student", first_name: "", last_name: "", email: "", department: "Computer Science" });
             showDialog('Success', 'User created successfully!', 'success');
             fetchAllData();
-        } catch (err) { console.error(err); showDialog('Error', 'Failed to add user. Please try again.', 'error'); }
+        } catch (err) { 
+            console.error('User creation error:', err.response?.data || err); 
+            const errorMsg = err.response?.data?.error || err.response?.data?.detail || err.message || 'Failed to add user';
+            showDialog('Error', errorMsg, 'error'); 
+        }
     };
 
     const handleAddCourse = async (e) => {
         e.preventDefault();
         try {
             await axios.post(API_ENDPOINTS.ADMIN_COURSES, newCourse, { headers });
-            setNewCourse({ code: "", name: "", credit_hours: 3, semester: "Fall" });
+            setNewCourse({ code: "", name: "", credit_hours: 3, semester: 1 });
             showDialog('Success', 'Course added successfully!', 'success');
             fetchAllData();
         } catch (err) { console.error(err); showDialog('Error', 'Failed to add course. Please try again.', 'error'); }
@@ -940,6 +950,53 @@ function AdminDashboard() {
                                 />
                             </div>
                             <div style={styles.formGroup}>
+                                <label style={styles.label}>First Name</label>
+                                <input 
+                                    style={styles.input}
+                                    placeholder="Enter first name" 
+                                    value={newUser.first_name} 
+                                    onChange={(e) => setNewUser({ ...newUser, first_name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Last Name</label>
+                                <input 
+                                    style={styles.input}
+                                    placeholder="Enter last name" 
+                                    value={newUser.last_name} 
+                                    onChange={(e) => setNewUser({ ...newUser, last_name: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Email</label>
+                                <input 
+                                    style={styles.input}
+                                    type="email"
+                                    placeholder="Enter email" 
+                                    value={newUser.email} 
+                                    onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
+                                    required
+                                />
+                            </div>
+                            <div style={styles.formGroup}>
+                                <label style={styles.label}>Department</label>
+                                <select 
+                                    style={styles.select}
+                                    value={newUser.department} 
+                                    onChange={(e) => setNewUser({ ...newUser, department: e.target.value })}
+                                >
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Software Engineering">Software Engineering</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electrical Engineering">Electrical Engineering</option>
+                                    <option value="Business Administration">Business Administration</option>
+                                    <option value="Mathematics">Mathematics</option>
+                                    <option value="Physics">Physics</option>
+                                </select>
+                            </div>
+                            <div style={styles.formGroup}>
                                 <label style={styles.label}>Role</label>
                                 <select 
                                     style={styles.select}
@@ -1036,7 +1093,7 @@ function AdminDashboard() {
                                     type="number" 
                                     placeholder="3" 
                                     value={newCourse.credit_hours} 
-                                    onChange={e => setNewCourse({ ...newCourse, credit_hours: e.target.value })}
+                                    onChange={e => setNewCourse({ ...newCourse, credit_hours: parseInt(e.target.value) })}
                                     min="1"
                                     max="6"
                                     required
@@ -1044,13 +1101,16 @@ function AdminDashboard() {
                             </div>
                             <div style={styles.formGroup}>
                                 <label style={styles.label}>Semester</label>
-                                <input 
+                                <select 
                                     style={styles.input}
-                                    placeholder="Fall" 
                                     value={newCourse.semester} 
-                                    onChange={e => setNewCourse({ ...newCourse, semester: e.target.value })}
+                                    onChange={e => setNewCourse({ ...newCourse, semester: parseInt(e.target.value) })}
                                     required
-                                />
+                                >
+                                    <option value={1}>1 (Fall)</option>
+                                    <option value={2}>2 (Spring)</option>
+                                    <option value={3}>3 (Summer)</option>
+                                </select>
                             </div>
                         </div>
                         <button type="submit" style={styles.successButton}>
@@ -1081,7 +1141,7 @@ function AdminDashboard() {
                                         <td style={{...styles.td, fontWeight: '600'}}>{c.code}</td>
                                         <td style={styles.td}>{c.name}</td>
                                         <td style={styles.td}>{c.credit_hours}h</td>
-                                        <td style={styles.td}>{c.semester}</td>
+                                        <td style={styles.td}>{getSemesterName(c.semester)}</td>
                                         <td style={styles.td}>
                                             {c.faculty_detail ? (
                                                 <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>

@@ -8,6 +8,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 
 User = get_user_model()
 
+# Import profile models
+from students.models import StudentProfile
+from faculty.models import FacultyProfile
+from ta.models import TAProfile
+
 
 # -------------------------
 # User Registration
@@ -196,6 +201,37 @@ class AdminUserViewSet(viewsets.ModelViewSet):
             first_name=first_name,
             last_name=last_name
         )
+
+        # Create corresponding profile based on role
+        if role == 'student':
+            # Generate unique enrollment number
+            import datetime
+            current_year = datetime.datetime.now().year % 100  # Last 2 digits of year
+            last_student = StudentProfile.objects.order_by('-id').first()
+            next_number = 1 if not last_student else int(last_student.enrollment_number.split('-')[1]) + 1
+            enrollment_number = f"{current_year}k-{next_number:04d}"
+            
+            StudentProfile.objects.create(
+                user=user,
+                enrollment_number=enrollment_number,
+                first_name=first_name,
+                last_name=last_name,
+                department=request.data.get('department', 'General')
+            )
+        elif role == 'faculty':
+            FacultyProfile.objects.create(
+                user=user,
+                first_name=first_name,
+                last_name=last_name,
+                department=request.data.get('department', 'General')
+            )
+        elif role == 'ta':
+            TAProfile.objects.create(
+                user=user,
+                first_name=first_name,
+                last_name=last_name,
+                department=request.data.get('department', 'General')
+            )
 
         serializer = self.get_serializer(user)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
