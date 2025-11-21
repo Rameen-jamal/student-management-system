@@ -292,6 +292,8 @@ function FacultyDashboard() {
     // Attendance State 
     const [selectedCourseIdForAttendance, setSelectedCourseIdForAttendance] = useState('');
     const [attendanceMark, setAttendanceMark] = useState({}); // {studentId: true/false}
+    const [attendanceHistory, setAttendanceHistory] = useState([]);
+    const [showAttendanceHistory, setShowAttendanceHistory] = useState(false);
 
     // Grades Filter State
     const [gradeFilter, setGradeFilter] = useState('all'); // all, graded, pending
@@ -413,7 +415,8 @@ function FacultyDashboard() {
             }, { headers });
 
             alert(`Attendance marked successfully for Course ID: ${selectedCourseIdForAttendance}!`);
-            setSelectedCourseIdForAttendance(''); // Reset course selection
+            // Refresh attendance history
+            fetchAttendanceHistory(selectedCourseIdForAttendance);
             setAttendanceMark({}); // Reset marks
             fetchFacultyData(); // Refresh data
         } catch(err) {
@@ -432,8 +435,23 @@ function FacultyDashboard() {
         if (courseId) {
             // Initialize all fetched students to NOT present (false)
             students.forEach(s => attendanceObj[s.id] = false); 
+            // Fetch attendance history for this course
+            fetchAttendanceHistory(courseId);
+        } else {
+            setAttendanceHistory([]);
+            setShowAttendanceHistory(false);
         }
         setAttendanceMark(attendanceObj);
+    };
+
+    // Fetch attendance history for a specific course
+    const fetchAttendanceHistory = async (courseId) => {
+        try {
+            const response = await axios.get(`${API_ENDPOINTS.COURSES}${courseId}/attendance_history/`, { headers });
+            setAttendanceHistory(response.data);
+        } catch (err) {
+            console.error("Error fetching attendance history:", err.response ? err.response.data : err);
+        }
     };
 
 
@@ -1297,7 +1315,116 @@ const handleCreateQuizGrades = async (quizId) => {
                 {/* --- Attendance Tab (NEW LOGIC) --- */}
                 {activeTab === 'attendance' && (
                     <div style={styles.section}>
-                        <h3>Mark Daily Attendance</h3>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+                            <h3 style={{margin: 0}}>Mark Daily Attendance</h3>
+                            {selectedCourseIdForAttendance && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowAttendanceHistory(!showAttendanceHistory)}
+                                    style={{
+                                        ...styles.button,
+                                        backgroundColor: showAttendanceHistory ? colors.secondary : colors.primary,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '0.5rem'
+                                    }}
+                                >
+                                    <Clock3 size={16} />
+                                    {showAttendanceHistory ? 'Hide History' : 'View History'}
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Attendance History View */}
+                        {showAttendanceHistory && selectedCourseIdForAttendance && (
+                            <div style={{...styles.card, marginBottom: '2rem'}}>
+                                <h4 style={{...styles.cardTitle, marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                    <Calendar size={20} />
+                                    Attendance History for {courseForAttendance?.code} - {courseForAttendance?.name}
+                                </h4>
+                                {attendanceHistory.length > 0 ? (
+                                    <div style={{display: 'grid', gap: '1rem'}}>
+                                        {attendanceHistory.map((record) => (
+                                            <div 
+                                                key={record.id} 
+                                                style={{
+                                                    padding: '1.5rem',
+                                                    backgroundColor: colors.light,
+                                                    borderRadius: '10px',
+                                                    border: `1px solid ${colors.border}`
+                                                }}
+                                            >
+                                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem'}}>
+                                                    <div>
+                                                        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem'}}>
+                                                            <Calendar size={16} color={colors.primary} />
+                                                            <strong style={{fontSize: '1rem', color: colors.textPrimary}}>
+                                                                {new Date(record.date).toLocaleDateString('en-US', { 
+                                                                    weekday: 'long', 
+                                                                    year: 'numeric', 
+                                                                    month: 'long', 
+                                                                    day: 'numeric' 
+                                                                })}
+                                                            </strong>
+                                                        </div>
+                                                        <div style={{fontSize: '0.875rem', color: colors.textSecondary}}>
+                                                            Marked by: {record.marked_by_name || 'N/A'}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{
+                                                        padding: '0.5rem 1rem',
+                                                        backgroundColor: 'white',
+                                                        borderRadius: '8px',
+                                                        border: `2px solid ${colors.success}`,
+                                                        textAlign: 'center'
+                                                    }}>
+                                                        <div style={{fontSize: '1.5rem', fontWeight: '700', color: colors.success}}>
+                                                            {record.students_present_detail?.length || 0}
+                                                        </div>
+                                                        <div style={{fontSize: '0.75rem', color: colors.textSecondary}}>
+                                                            Present
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                
+                                                {/* List of present students */}
+                                                {record.students_present_detail && record.students_present_detail.length > 0 && (
+                                                    <div>
+                                                        <div style={{fontSize: '0.875rem', fontWeight: '600', color: colors.textSecondary, marginBottom: '0.5rem'}}>
+                                                            Students Present:
+                                                        </div>
+                                                        <div style={{display: 'flex', flexWrap: 'wrap', gap: '0.5rem'}}>
+                                                            {record.students_present_detail.map((student) => (
+                                                                <span
+                                                                    key={student.id}
+                                                                    style={{
+                                                                        padding: '0.25rem 0.75rem',
+                                                                        backgroundColor: 'white',
+                                                                        borderRadius: '20px',
+                                                                        fontSize: '0.875rem',
+                                                                        border: `1px solid ${colors.border}`,
+                                                                        color: colors.textPrimary
+                                                                    }}
+                                                                >
+                                                                    {student.first_name} {student.last_name}
+                                                                </span>
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div style={{textAlign: 'center', padding: '2rem', color: colors.textSecondary}}>
+                                        <Calendar size={48} style={{marginBottom: '1rem', opacity: 0.3}} />
+                                        <p>No attendance records found for this course.</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Mark Attendance Form */}
                         <form onSubmit={handleAttendanceSubmit} style={styles.form}>
                             {/* Course Selection */}
                             <select 
@@ -1312,7 +1439,7 @@ const handleCreateQuizGrades = async (quizId) => {
                                 ))}
                             </select>
 
-                            {selectedCourseIdForAttendance && (
+                            {selectedCourseIdForAttendance && !showAttendanceHistory && (
                                 <>
                                     <h4>Mark Students Present for {courseForAttendance?.code} - {courseForAttendance?.name}</h4>
                                     <div style={{maxHeight: '400px', overflowY: 'auto', paddingRight: '10px'}}>

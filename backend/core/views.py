@@ -672,8 +672,16 @@ class CourseViewSet(viewsets.ModelViewSet):
         serializer = CourseAnnouncementSerializer(announcement)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
+    # Get attendance history for a course
+    @action(detail=True, methods=['get'], url_path='attendance_history')
+    def attendance_history(self, request, pk=None):
+        course = self.get_object()
+        attendances = Attendance.objects.filter(course=course).order_by('-date')
+        serializer = AttendanceSerializer(attendances, many=True)
+        return Response(serializer.data)
+    
     # Mark attendance for the specific course
-    @action(detail=True, methods=['post'], url_path='mark_attendance')
+    @action(detail=True, methods=['post'], url_path='mark_attendance', parser_classes=[JSONParser])
     def mark_attendance(self, request, pk=None):
         course = self.get_object() 
         student_ids = request.data.get('student_ids', [])
@@ -696,7 +704,7 @@ class CourseViewSet(viewsets.ModelViewSet):
 
 
     # Send message to a student
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['post'], parser_classes=[JSONParser])
     def message_student(self, request, pk=None):
         course = self.get_object()
         student_id = request.data.get('student_id')
