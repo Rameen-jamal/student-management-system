@@ -660,6 +660,17 @@ class CourseViewSet(viewsets.ModelViewSet):
                 {"detail": "User is not linked to a Faculty Profile. Please check your data setup in the Admin panel."}, 
                 status=status.HTTP_403_FORBIDDEN
             )
+        
+        # Create the announcement
+        announcement = CourseAnnouncement.objects.create(
+            course=course,
+            title=request.data.get('title', ''),
+            content=request.data.get('content', ''),
+            posted_by=faculty_profile
+        )
+        
+        serializer = CourseAnnouncementSerializer(announcement)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     
     # Mark attendance for the specific course
     @action(detail=True, methods=['post'], url_path='mark_attendance')
