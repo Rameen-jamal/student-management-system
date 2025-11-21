@@ -738,22 +738,25 @@ class SubmissionViewSet(viewsets.ModelViewSet):
         
         return Submission.objects.none()
 
-    # Approve/reject late submission
-    @action(detail=True, methods=['post'])
+    # Approve/reject late submission and grade
+    @action(detail=True, methods=['post', 'patch'], parser_classes=[JSONParser, MultiPartParser, FormParser])
     def update_status(self, request, pk=None):
         submission = self.get_object()
         status_choice = request.data.get('status')
         feedback = request.data.get('feedback', submission.feedback)
         grade = request.data.get('grade', submission.grade)
 
-        if status_choice not in ['pending', 'approved', 'rejected']:
+        if status_choice and status_choice not in ['pending', 'approved', 'rejected', 'graded']:
             return Response({"error": "Invalid status"}, status=status.HTTP_400_BAD_REQUEST)
 
-        submission.status = status_choice
+        if status_choice:
+            submission.status = status_choice
         submission.feedback = feedback
         submission.grade = grade
         submission.save()
-        return Response({"status": f"Submission {status_choice}"})
+        
+        serializer = self.get_serializer(submission)
+        return Response(serializer.data)
 
 
 # ------------------ AssignmentViewSet ------------------

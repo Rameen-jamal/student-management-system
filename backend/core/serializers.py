@@ -274,7 +274,10 @@ class QuizSerializer(serializers.ModelSerializer):
 # QuizGrade Serializer
 class QuizGradeSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
-    quiz_title = serializers.CharField(source='quiz.title', read_only=True)
+    quiz_name = serializers.CharField(source='quiz.title', read_only=True)
+    course_code = serializers.CharField(source='quiz.course.code', read_only=True)
+    score = serializers.FloatField(source='marks_obtained', read_only=True)
+    max = serializers.FloatField(source='quiz.max_marks', read_only=True)
 
     class Meta:
         model = QuizGrade
