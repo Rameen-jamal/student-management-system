@@ -5,8 +5,168 @@ import { API_ENDPOINTS } from "./config/api";
 import { 
     User, BookOpen, ClipboardCheck, Clock, Users, LogOut, 
     CheckCircle, AlertCircle, Target, MessageSquare, 
-    Award, FileText, TrendingUp, Briefcase, Edit2, Save, X
+    Award, FileText, TrendingUp, Briefcase, Edit2, Save, X, XCircle
 } from 'lucide-react';
+
+// Dialog Component
+const Dialog = ({ isOpen, onClose, title, message, type = 'info', onConfirm }) => {
+    if (!isOpen) return null;
+
+    const getIcon = () => {
+        switch (type) {
+            case 'success':
+                return <CheckCircle size={48} color="#10B981" />;
+            case 'error':
+                return <XCircle size={48} color="#EF4444" />;
+            case 'warning':
+                return <AlertCircle size={48} color="#F59E0B" />;
+            case 'confirm':
+                return <AlertCircle size={48} color="#4F46E5" />;
+            default:
+                return <AlertCircle size={48} color="#4F46E5" />;
+        }
+    };
+
+    const getColor = () => {
+        switch (type) {
+            case 'success': return '#10B981';
+            case 'error': return '#EF4444';
+            case 'warning': return '#F59E0B';
+            default: return '#4F46E5';
+        }
+    };
+
+    return (
+        <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '1rem'
+        }}>
+            <div style={{
+                backgroundColor: 'white',
+                borderRadius: '12px',
+                padding: '2rem',
+                maxWidth: '450px',
+                width: '100%',
+                boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                position: 'relative'
+            }}>
+                <button
+                    onClick={onClose}
+                    style={{
+                        position: 'absolute',
+                        top: '1rem',
+                        right: '1rem',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: '#6B7280',
+                        padding: '0.25rem'
+                    }}
+                >
+                    <X size={20} />
+                </button>
+
+                <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+                    {getIcon()}
+                </div>
+
+                {title && (
+                    <h3 style={{
+                        margin: '0 0 1rem 0',
+                        fontSize: '1.25rem',
+                        fontWeight: '700',
+                        color: '#1F2937',
+                        textAlign: 'center'
+                    }}>
+                        {title}
+                    </h3>
+                )}
+
+                <p style={{
+                    margin: '0 0 1.5rem 0',
+                    fontSize: '1rem',
+                    color: '#6B7280',
+                    textAlign: 'center',
+                    lineHeight: '1.5'
+                }}>
+                    {message}
+                </p>
+
+                <div style={{
+                    display: 'flex',
+                    gap: '0.75rem',
+                    justifyContent: 'center'
+                }}>
+                    {type === 'confirm' ? (
+                        <>
+                            <button
+                                onClick={onClose}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    backgroundColor: '#F3F4F6',
+                                    color: '#1F2937',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: '600',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    onConfirm();
+                                    onClose();
+                                }}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    backgroundColor: getColor(),
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: 'pointer',
+                                    fontSize: '1rem',
+                                    fontWeight: '600',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                Confirm
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            onClick={onClose}
+                            style={{
+                                padding: '0.75rem 2rem',
+                                backgroundColor: getColor(),
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '8px',
+                                cursor: 'pointer',
+                                fontSize: '1rem',
+                                fontWeight: '600',
+                                transition: 'all 0.2s'
+                            }}
+                        >
+                            OK
+                        </button>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // Color palette matching FacultyDashboard
 const colors = {
@@ -36,6 +196,23 @@ function TADashboard() {
     const [selectedSubmission, setSelectedSubmission] = useState(null);
     const [gradeData, setGradeData] = useState({ grade: '', feedback: '' });
     const navigate = useNavigate();
+
+    // Dialog state
+    const [dialog, setDialog] = useState({
+        isOpen: false,
+        title: '',
+        message: '',
+        type: 'info',
+        onConfirm: null
+    });
+
+    const showDialog = (title, message, type = 'info', onConfirm = null) => {
+        setDialog({ isOpen: true, title, message, type, onConfirm });
+    };
+
+    const closeDialog = () => {
+        setDialog({ isOpen: false, title: '', message: '', type: 'info', onConfirm: null });
+    };
 
     const fetchTAData = useCallback(async () => {
         const token = localStorage.getItem("access_token");
@@ -97,9 +274,10 @@ function TADashboard() {
             setSelectedTask(null);
             setTaskUpdate({ status: '', completion_notes: '' });
             fetchTAData();
+            showDialog('Success', 'Task updated successfully!', 'success');
         } catch (err) {
             console.error('Error updating task:', err);
-            alert('Failed to update task');
+            showDialog('Error', 'Failed to update task. Please try again.', 'error');
         }
     };
 
@@ -114,10 +292,10 @@ function TADashboard() {
             setSelectedSubmission(null);
             setGradeData({ grade: '', feedback: '' });
             fetchTAData();
-            alert('Submission graded successfully!');
+            showDialog('Success', 'Submission graded successfully!', 'success');
         } catch (err) {
             console.error('Error grading submission:', err);
-            alert('Failed to grade submission');
+            showDialog('Error', 'Failed to grade submission. Please try again.', 'error');
         }
     };
 
@@ -505,6 +683,16 @@ function TADashboard() {
                     </div>
                 </div>
             )}
+
+            {/* Dialog Component */}
+            <Dialog
+                isOpen={dialog.isOpen}
+                onClose={closeDialog}
+                title={dialog.title}
+                message={dialog.message}
+                type={dialog.type}
+                onConfirm={dialog.onConfirm}
+            />
         </div>
     );
 }
