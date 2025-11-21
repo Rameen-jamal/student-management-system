@@ -726,7 +726,17 @@ class SubmissionViewSet(viewsets.ModelViewSet):
     queryset = Submission.objects.all()
 
     def get_queryset(self):
-        return Submission.objects.filter(assignment__uploaded_by__user=self.request.user)
+        user = self.request.user
+        
+        # Faculty: see submissions for their assignments
+        if hasattr(user, 'facultyprofile'):
+            return Submission.objects.filter(assignment__uploaded_by=user.facultyprofile)
+        
+        # Students: see their own submissions
+        elif hasattr(user, 'student_profile'):
+            return Submission.objects.filter(student=user.student_profile)
+        
+        return Submission.objects.none()
 
     # Approve/reject late submission
     @action(detail=True, methods=['post'])
@@ -754,9 +764,17 @@ class AssignmentViewSet(viewsets.ModelViewSet):
     queryset = Assignment.objects.all()
 
     def get_queryset(self):
-        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
-        if faculty_profile:
-            return Assignment.objects.filter(uploaded_by=faculty_profile)
+        user = self.request.user
+        
+        # Faculty: see assignments they uploaded
+        if hasattr(user, 'facultyprofile'):
+            return Assignment.objects.filter(uploaded_by=user.facultyprofile)
+        
+        # Students: see assignments for their enrolled courses
+        elif hasattr(user, 'student_profile'):
+            enrolled_courses = user.student_profile.courses_enrolled.all()
+            return Assignment.objects.filter(course__in=enrolled_courses)
+        
         return Assignment.objects.none()
 
     def perform_create(self, serializer):
@@ -772,10 +790,16 @@ class AttendanceViewSet(viewsets.ModelViewSet):
     queryset = Attendance.objects.all()
 
     def get_queryset(self):
-        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
-        if faculty_profile:
-            # Filters attendance records for courses taught by the faculty
-            return Attendance.objects.filter(course__in=faculty_profile.courses.all())
+        user = self.request.user
+        
+        # Faculty: see attendance for their courses
+        if hasattr(user, 'facultyprofile'):
+            return Attendance.objects.filter(course__in=user.facultyprofile.courses.all())
+        
+        # Students: see attendance records where they are present
+        elif hasattr(user, 'student_profile'):
+            return Attendance.objects.filter(students_present=user.student_profile)
+        
         return Attendance.objects.none()
 
 # ------------------ QuizViewSet ------------------
@@ -785,9 +809,17 @@ class QuizViewSet(viewsets.ModelViewSet):
     queryset = Quiz.objects.all()
 
     def get_queryset(self):
-        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
-        if faculty_profile:
-            return Quiz.objects.filter(course__in=faculty_profile.courses.all())
+        user = self.request.user
+        
+        # Faculty: see quizzes for their courses
+        if hasattr(user, 'facultyprofile'):
+            return Quiz.objects.filter(course__in=user.facultyprofile.courses.all())
+        
+        # Students: see quizzes for their enrolled courses
+        elif hasattr(user, 'student_profile'):
+            enrolled_courses = user.student_profile.courses_enrolled.all()
+            return Quiz.objects.filter(course__in=enrolled_courses)
+        
         return Quiz.objects.none()
 
 # ------------------ QuizGradeViewSet ------------------
@@ -797,9 +829,16 @@ class QuizGradeViewSet(viewsets.ModelViewSet):
     queryset = QuizGrade.objects.all()
 
     def get_queryset(self):
-        faculty_profile = getattr(self.request.user, 'facultyprofile', None)
-        if faculty_profile:
-            return QuizGrade.objects.filter(quiz__course__in=faculty_profile.courses.all())
+        user = self.request.user
+        
+        # Faculty: see all quiz grades for their courses
+        if hasattr(user, 'facultyprofile'):
+            return QuizGrade.objects.filter(quiz__course__in=user.facultyprofile.courses.all())
+        
+        # Students: see only their own quiz grades
+        elif hasattr(user, 'student_profile'):
+            return QuizGrade.objects.filter(student=user.student_profile)
+        
         return QuizGrade.objects.none()
 
 # ------------------ TA TaskViewSet ------------------
