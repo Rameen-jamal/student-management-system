@@ -240,43 +240,74 @@ class AssignmentSerializer(serializers.ModelSerializer):
 class SubmissionSerializer(serializers.ModelSerializer):
     student_name = serializers.SerializerMethodField()
     assignment_title = serializers.CharField(source='assignment.title', read_only=True)
-    student = serializers.SerializerMethodField()
-    assignment = serializers.SerializerMethodField()
+
+    # Keep student and assignment readable but allow assignment to be written as PK
+    student = serializers.PrimaryKeyRelatedField(read_only=True)
+    assignment = serializers.PrimaryKeyRelatedField(queryset=Assignment.objects.all())
 
     class Meta:
         model = Submission
         fields = '__all__'
-        read_only_fields = ['submitted_at']
+        read_only_fields = ['submitted_at', 'student']
 
     def get_student_name(self, obj):
         return f"{obj.student.first_name} {obj.student.last_name}"
-    
-    def get_student(self, obj):
-        if obj.student:
-            return {
-                'id': obj.student.id,
-                'full_name': f"{obj.student.first_name} {obj.student.last_name}",
-                'first_name': obj.student.first_name,
-                'last_name': obj.student.last_name,
-                'enrollment_number': obj.student.enrollment_number
+
+    def to_representation(self, instance):
+        """Customize representation to include nested student and assignment details for frontend."""
+        rep = super().to_representation(instance)
+        # add nested student
+        if instance.student:
+            rep['student'] = {
+                'id': instance.student.id,
+                'full_name': f"{instance.student.first_name} {instance.student.last_name}",
+                'first_name': instance.student.first_name,
+                'last_name': instance.student.last_name,
+                'enrollment_number': instance.student.enrollment_number,
             }
-        return None
-    
-    def get_assignment(self, obj):
-        if obj.assignment:
-            return {
-                'id': obj.assignment.id,
-                'title': obj.assignment.title,
-                'description': obj.assignment.description,
-                'max_points': obj.assignment.max_points,
-                'due_date': obj.assignment.due_date,
+        else:
+            rep['student'] = None
+
+        # add nested assignment
+        if instance.assignment:
+            rep['assignment'] = {
+                'id': instance.assignment.id,
+                'title': instance.assignment.title,
+                'description': instance.assignment.description,
+                'max_points': instance.assignment.max_points,
+                'due_date': instance.assignment.due_date,
                 'course': {
-                    'id': obj.assignment.course.id,
-                    'code': obj.assignment.course.code,
-                    'name': obj.assignment.course.name
-                } if obj.assignment.course else None
+                    'id': instance.assignment.course.id,
+                    'code': instance.assignment.course.code,
+                    'name': instance.assignment.course.name
+                } if instance.assignment.course else None
             }
-        return None
+        else:
+            rep['assignment'] = None
+
+        return rep
+
+    def create(self, validated_data):
+        """Automatically set the student from request.user and create the submission."""
+        request = self.context.get('request')
+        if not request:
+            raise serializers.ValidationError({"error": "Request context is required"})
+
+        student_profile = getattr(request.user, 'student_profile', None)
+        if not student_profile:
+            raise serializers.ValidationError({
+                "error": f"User '{request.user.username}' does not have an associated student profile. "
+                         f"User role: {getattr(request.user, 'role', 'unknown')}"
+            })
+
+        # Prevent duplicate submission (unique_together will also protect but give friendlier error)
+        assignment = validated_data.get('assignment')
+        if Submission.objects.filter(assignment=assignment, student=student_profile).exists():
+            raise serializers.ValidationError({"error": "You have already submitted for this assignment"})
+
+        validated_data['student'] = student_profile
+        validated_data.setdefault('status', 'pending')
+        return super().create(validated_data)
 
 # Attendance Serializer
 class AttendanceSerializer(serializers.ModelSerializer):

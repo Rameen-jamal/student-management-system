@@ -329,6 +329,12 @@ function Dashboard() {
     const [quizFilter, setQuizFilter] = useState('all'); // all, upcoming, past
     const [searchQuery, setSearchQuery] = useState('');
     
+    // Submission modal states
+    const [showSubmitModal, setShowSubmitModal] = useState(false);
+    const [selectedAssignment, setSelectedAssignment] = useState(null);
+    const [submissionFile, setSubmissionFile] = useState(null);
+    const [submitting, setSubmitting] = useState(false);
+    
     const navigate = useNavigate();
 
     const token = localStorage.getItem("access_token");
@@ -369,13 +375,75 @@ function Dashboard() {
     };
 
     const getPendingAssignments = () => {
-        return assignments.filter(a => !submissions.find(s => s.assignment === a.id)).length;
+        return assignments.filter(a => {
+            const hasSubmission = submissions.find(s => {
+                const submissionAssignmentId = typeof s.assignment === 'object' ? s.assignment?.id : s.assignment;
+                return submissionAssignmentId === a.id;
+            });
+            return !hasSubmission;
+        }).length;
     };
 
     const getAverageGrade = () => {
         if (!submissions.length) return 'N/A';
         const total = submissions.reduce((acc, s) => acc + (s.grade || 0), 0);
         return (total / submissions.length).toFixed(1);
+    };
+
+    const handleSubmitAssignmentOpen = (assignment) => {
+        setSelectedAssignment(assignment);
+        setSubmissionFile(null);
+        setShowSubmitModal(true);
+    };
+
+    const handleSubmitAssignment = async () => {
+        if (!submissionFile) {
+            alert('Please select a file to submit');
+            return;
+        }
+        
+        setSubmitting(true);
+        try {
+            const formData = new FormData();
+            formData.append('assignment', selectedAssignment.id);
+            formData.append('file', submissionFile);
+            
+            console.log('Submitting assignment ID:', selectedAssignment.id);
+            console.log('File:', submissionFile.name);
+            
+            const response = await axios.post(API_ENDPOINTS.SUBMISSIONS, formData, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                    // Don't set Content-Type - let axios set it with boundary
+                }
+            });
+            
+            console.log('Submission successful:', response.data);
+            console.log('Submission assignment field:', response.data.assignment);
+            
+            // Refresh submissions data
+            const submissionsRes = await axios.get(API_ENDPOINTS.SUBMISSIONS, { headers });
+            console.log('Refreshed submissions:', submissionsRes.data);
+            console.log('Assignment IDs in submissions:', submissionsRes.data.map(s => ({id: s.id, assignment: s.assignment})));
+            setSubmissions(submissionsRes.data);
+            
+            setShowSubmitModal(false);
+            setSelectedAssignment(null);
+            setSubmissionFile(null);
+            alert('Assignment submitted successfully!');
+        } catch (err) {
+            console.error('Submission error:', err);
+            console.error('Error response:', err.response?.data);
+            const errorMsg = err.response?.data?.assignment?.[0] 
+                || err.response?.data?.detail 
+                || err.response?.data?.error 
+                || err.response?.data?.non_field_errors?.[0]
+                || JSON.stringify(err.response?.data)
+                || 'Failed to submit assignment';
+            alert(errorMsg);
+        } finally {
+            setSubmitting(false);
+        }
     };
 
     // Get unique courses for filter
@@ -395,9 +463,21 @@ function Dashboard() {
         
         // Filter by status
         if (assignmentFilter === 'pending') {
-            filtered = filtered.filter(a => !submissions.find(s => s.assignment === a.id));
+            filtered = filtered.filter(a => {
+                const hasSubmission = submissions.find(s => {
+                    const submissionAssignmentId = typeof s.assignment === 'object' ? s.assignment?.id : s.assignment;
+                    return submissionAssignmentId === a.id;
+                });
+                return !hasSubmission;
+            });
         } else if (assignmentFilter === 'submitted') {
-            filtered = filtered.filter(a => submissions.find(s => s.assignment === a.id));
+            filtered = filtered.filter(a => {
+                const hasSubmission = submissions.find(s => {
+                    const submissionAssignmentId = typeof s.assignment === 'object' ? s.assignment?.id : s.assignment;
+                    return submissionAssignmentId === a.id;
+                });
+                return hasSubmission;
+            });
         }
         
         // Search filter
@@ -824,7 +904,12 @@ function Dashboard() {
                         </div>
 
                         {getFilteredAssignments().length > 0 ? getFilteredAssignments().map(a => {
-                            const isSubmitted = submissions.find(s => s.assignment === a.id);
+                            const submission = submissions.find(s => {
+                                // Handle both nested object and direct ID
+                                const submissionAssignmentId = typeof s.assignment === 'object' ? s.assignment?.id : s.assignment;
+                                return submissionAssignmentId === a.id;
+                            });
+                            const isSubmitted = !!submission;
                             const dueDate = new Date(a.due_date);
                             const isOverdue = dueDate < new Date() && !isSubmitted;
                             
@@ -845,15 +930,46 @@ function Dashboard() {
                                             <p style={{margin: '0.5rem 0', color: colors.textSecondary, fontSize: '0.875rem'}}>
                                                 {a.description || 'No description provided'}
                                             </p>
+                                            {isSubmitted && submission && (
+                                                <div style={{marginTop: '0.5rem', fontSize: '0.875rem'}}>
+                                                    <span style={{color: colors.success, fontWeight: '600'}}>✓ Submitted on {new Date(submission.submitted_at).toLocaleDateString()}</span>
+                                                    {submission.grade && (
+                                                        <span style={{marginLeft: '1rem', color: colors.primary, fontWeight: '600'}}>
+                                                            Grade: {submission.grade}/{a.max_points}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            )}
                                         </div>
-                                        <span style={{
-                                            ...styles.badge, 
-                                            backgroundColor: isSubmitted ? colors.success : isOverdue ? colors.danger : colors.warning,
-                                            color: 'white',
-                                            marginLeft: '1rem'
-                                        }}>
-                                            {isSubmitted ? 'Submitted' : isOverdue ? 'Overdue' : 'Pending'}
-                                        </span>
+                                        <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem', marginLeft: '1rem'}}>
+                                            <span style={{
+                                                ...styles.badge, 
+                                                backgroundColor: isSubmitted ? colors.success : isOverdue ? colors.danger : colors.warning,
+                                                color: 'white'
+                                            }}>
+                                                {isSubmitted ? 'Submitted' : isOverdue ? 'Overdue' : 'Pending'}
+                                            </span>
+                                            {!isSubmitted && (
+                                                <button 
+                                                    onClick={() => handleSubmitAssignmentOpen(a)}
+                                                    style={{
+                                                        padding: '0.5rem 1rem',
+                                                        backgroundColor: colors.primary,
+                                                        color: 'white',
+                                                        border: 'none',
+                                                        borderRadius: '6px',
+                                                        cursor: 'pointer',
+                                                        fontSize: '0.875rem',
+                                                        fontWeight: '600',
+                                                        transition: 'all 0.2s'
+                                                    }}
+                                                    onMouseEnter={(e) => e.target.style.backgroundColor = colors.primaryHover}
+                                                    onMouseLeave={(e) => e.target.style.backgroundColor = colors.primary}
+                                                >
+                                                    Submit
+                                                </button>
+                                            )}
+                                        </div>
                                     </div>
                                     <div style={{display: 'flex', gap: '1.5rem', fontSize: '0.875rem', color: colors.textSecondary, flexWrap: 'wrap'}}>
                                         <span>📚 {a.course_name}</span>
@@ -1123,6 +1239,118 @@ function Dashboard() {
                     </div>
                 )}
             </div>
+
+            {/* Submit Assignment Modal */}
+            {showSubmitModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000
+                }}>
+                    <div style={{
+                        backgroundColor: colors.cardBg,
+                        padding: '2rem',
+                        borderRadius: '12px',
+                        maxWidth: '500px',
+                        width: '90%',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+                    }}>
+                        <h2 style={{margin: '0 0 1rem 0', color: colors.textPrimary, fontSize: '1.5rem'}}>
+                            Submit Assignment
+                        </h2>
+                        <div style={{marginBottom: '1rem'}}>
+                            <h3 style={{margin: '0 0 0.5rem 0', color: colors.textPrimary, fontSize: '1.125rem'}}>
+                                {selectedAssignment?.title}
+                            </h3>
+                            <p style={{margin: 0, color: colors.textSecondary, fontSize: '0.875rem'}}>
+                                {selectedAssignment?.description}
+                            </p>
+                        </div>
+                        <div style={{marginBottom: '1.5rem'}}>
+                            <label style={{
+                                display: 'block',
+                                marginBottom: '0.5rem',
+                                color: colors.textPrimary,
+                                fontSize: '0.875rem',
+                                fontWeight: '600'
+                            }}>
+                                Upload File
+                            </label>
+                            <input
+                                type="file"
+                                onChange={(e) => setSubmissionFile(e.target.files[0])}
+                                style={{
+                                    width: '100%',
+                                    padding: '0.75rem',
+                                    border: `2px dashed ${colors.border}`,
+                                    borderRadius: '8px',
+                                    fontSize: '0.875rem',
+                                    cursor: 'pointer'
+                                }}
+                            />
+                            {submissionFile && (
+                                <p style={{margin: '0.5rem 0 0 0', color: colors.success, fontSize: '0.875rem'}}>
+                                    ✓ {submissionFile.name}
+                                </p>
+                            )}
+                        </div>
+                        <div style={{display: 'flex', gap: '1rem', justifyContent: 'flex-end'}}>
+                            <button
+                                onClick={() => {
+                                    setShowSubmitModal(false);
+                                    setSelectedAssignment(null);
+                                    setSubmissionFile(null);
+                                }}
+                                disabled={submitting}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    backgroundColor: colors.light,
+                                    color: colors.textPrimary,
+                                    border: `1px solid ${colors.border}`,
+                                    borderRadius: '8px',
+                                    cursor: submitting ? 'not-allowed' : 'pointer',
+                                    fontSize: '0.875rem',
+                                    fontWeight: '600',
+                                    opacity: submitting ? 0.5 : 1
+                                }}
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleSubmitAssignment}
+                                disabled={submitting || !submissionFile}
+                                style={{
+                                    padding: '0.75rem 1.5rem',
+                                    backgroundColor: submitting || !submissionFile ? colors.textSecondary : colors.primary,
+                                    color: 'white',
+                                    border: 'none',
+                                    borderRadius: '8px',
+                                    cursor: submitting || !submissionFile ? 'not-allowed' : 'pointer',
+                                    fontSize: '0.875rem',
+                                    fontWeight: '600',
+                                    transition: 'background-color 0.2s',
+                                    opacity: submitting || !submissionFile ? 0.5 : 1
+                                }}
+                                onMouseEnter={(e) => {
+                                    if (!submitting && submissionFile) e.target.style.backgroundColor = colors.primaryHover;
+                                }}
+                                onMouseLeave={(e) => {
+                                    if (!submitting && submissionFile) e.target.style.backgroundColor = colors.primary;
+                                }}
+                            >
+                                {submitting ? 'Submitting...' : 'Submit Assignment'}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
