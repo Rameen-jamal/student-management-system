@@ -646,7 +646,7 @@ class CourseViewSet(viewsets.ModelViewSet):
         
         # Students: see courses they're enrolled in
         elif hasattr(user, 'student_profile'):
-            return user.student_profile.enrolled_courses.all()
+            return user.student_profile.courses_enrolled.all()
         
         return Course.objects.none()
 

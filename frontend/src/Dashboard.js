@@ -335,6 +335,12 @@ function Dashboard() {
     const [submissionFile, setSubmissionFile] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     
+    // Announcements modal states
+    const [showAnnouncementsModal, setShowAnnouncementsModal] = useState(false);
+    const [selectedCourseForAnnouncements, setSelectedCourseForAnnouncements] = useState(null);
+    const [courseAnnouncements, setCourseAnnouncements] = useState([]);
+    const [loadingAnnouncements, setLoadingAnnouncements] = useState(false);
+    
     const navigate = useNavigate();
 
     const token = localStorage.getItem("access_token");
@@ -394,6 +400,38 @@ function Dashboard() {
         setSelectedAssignment(assignment);
         setSubmissionFile(null);
         setShowSubmitModal(true);
+    };
+
+    const handleViewAnnouncements = async (course) => {
+        setSelectedCourseForAnnouncements(course);
+        setShowAnnouncementsModal(true);
+        setLoadingAnnouncements(true);
+        
+        try {
+            console.log('Fetching announcements for course:', course);
+            console.log('Course ID:', course.course);
+            console.log('Request URL:', `${API_ENDPOINTS.COURSES}${course.course}/`);
+            
+            // Fetch course details which includes announcements
+            const response = await axios.get(`${API_ENDPOINTS.COURSES}${course.course}/`, { headers });
+            console.log('Course detail response:', response.data);
+            console.log('Announcements:', response.data.announcements_detail);
+            
+            const announcements = response.data.announcements_detail || [];
+            setCourseAnnouncements(announcements);
+        } catch (err) {
+            console.error('Error fetching announcements:', err);
+            console.error('Error response:', err.response?.data);
+            console.error('Error status:', err.response?.status);
+            setCourseAnnouncements([]);
+            if (err.response?.status === 404) {
+                alert('Course not found. You may not have permission to view this course.');
+            } else if (err.response?.status === 403) {
+                alert('You do not have permission to view announcements for this course.');
+            }
+        } finally {
+            setLoadingAnnouncements(false);
+        }
     };
 
     const handleSubmitAssignment = async () => {
@@ -816,17 +854,51 @@ function Dashboard() {
                                     e.currentTarget.style.boxShadow = 'none';
                                 }}
                             >
-                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
-                                    <div>
+                                <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem'}}>
+                                    <div style={{flex: 1}}>
                                         <h3 style={{margin: 0, color: colors.textPrimary, fontSize: '1.125rem'}}>{c.course_name}</h3>
                                         <p style={{margin: '0.25rem 0 0 0', color: colors.textSecondary, fontSize: '0.875rem'}}>
                                             Enrolled: {new Date(c.date_enrolled).toLocaleDateString()}
                                         </p>
                                     </div>
-                                    <span style={{...styles.badge, backgroundColor: c.status === 'active' ? colors.success : colors.warning, color: 'white'}}>
-                                        {c.status}
-                                    </span>
+                                    <div style={{display: 'flex', alignItems: 'center', gap: '0.5rem'}}>
+                                        <span style={{...styles.badge, backgroundColor: c.status === 'active' ? colors.success : colors.warning, color: 'white'}}>
+                                            {c.status}
+                                        </span>
+                                    </div>
                                 </div>
+                                <button
+                                    onClick={() => handleViewAnnouncements(c)}
+                                    style={{
+                                        width: '100%',
+                                        padding: '0.75rem',
+                                        backgroundColor: colors.light,
+                                        color: colors.primary,
+                                        border: `2px solid ${colors.border}`,
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        fontSize: '0.875rem',
+                                        fontWeight: '600',
+                                        transition: 'all 0.2s',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '0.5rem'
+                                    }}
+                                    onMouseEnter={(e) => {
+                                        e.target.style.backgroundColor = colors.primary;
+                                        e.target.style.color = 'white';
+                                        e.target.style.borderColor = colors.primary;
+                                    }}
+                                    onMouseLeave={(e) => {
+                                        e.target.style.backgroundColor = colors.light;
+                                        e.target.style.color = colors.primary;
+                                        e.target.style.borderColor = colors.border;
+                                    }}
+                                >
+                                    <MessageSquare size={16} />
+                                    View Announcements
+                                </button>
                             </div>
                         )) : <div style={styles.emptyState}>No courses enrolled yet</div>}
                     </div>
@@ -1239,6 +1311,127 @@ function Dashboard() {
                     </div>
                 )}
             </div>
+
+            {/* Announcements Modal */}
+            {showAnnouncementsModal && (
+                <div style={{
+                    position: 'fixed',
+                    top: 0,
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    backgroundColor: 'rgba(0,0,0,0.5)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    zIndex: 1000,
+                    padding: '1rem'
+                }}>
+                    <div style={{
+                        backgroundColor: colors.cardBg,
+                        padding: '2rem',
+                        borderRadius: '12px',
+                        maxWidth: '700px',
+                        width: '100%',
+                        maxHeight: '80vh',
+                        overflowY: 'auto',
+                        boxShadow: '0 10px 40px rgba(0,0,0,0.2)'
+                    }}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+                            <h2 style={{margin: 0, color: colors.textPrimary, fontSize: '1.5rem'}}>
+                                <MessageSquare size={24} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.5rem'}} />
+                                Course Announcements
+                            </h2>
+                            <button
+                                onClick={() => {
+                                    setShowAnnouncementsModal(false);
+                                    setSelectedCourseForAnnouncements(null);
+                                    setCourseAnnouncements([]);
+                                }}
+                                style={{
+                                    padding: '0.5rem',
+                                    backgroundColor: 'transparent',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    borderRadius: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                                onMouseEnter={(e) => e.target.style.backgroundColor = colors.light}
+                                onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                            >
+                                <X size={24} color={colors.textSecondary} />
+                            </button>
+                        </div>
+                        
+                        {selectedCourseForAnnouncements && (
+                            <div style={{
+                                padding: '1rem',
+                                backgroundColor: colors.light,
+                                borderRadius: '8px',
+                                marginBottom: '1.5rem',
+                                border: `1px solid ${colors.border}`
+                            }}>
+                                <h3 style={{margin: 0, fontSize: '1.125rem', color: colors.primary}}>
+                                    {selectedCourseForAnnouncements.course_name}
+                                </h3>
+                            </div>
+                        )}
+                        
+                        {loadingAnnouncements ? (
+                            <div style={{textAlign: 'center', padding: '2rem', color: colors.textSecondary}}>
+                                Loading announcements...
+                            </div>
+                        ) : courseAnnouncements.length > 0 ? (
+                            <div style={{display: 'flex', flexDirection: 'column', gap: '1rem'}}>
+                                {courseAnnouncements.map((announcement, index) => (
+                                    <div 
+                                        key={announcement.id || index}
+                                        style={{
+                                            padding: '1.5rem',
+                                            backgroundColor: colors.light,
+                                            borderRadius: '10px',
+                                            border: `1px solid ${colors.border}`,
+                                            transition: 'all 0.2s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 4px 12px rgba(0,0,0,0.1)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+                                    >
+                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.75rem'}}>
+                                            <h4 style={{margin: 0, fontSize: '1.125rem', color: colors.textPrimary, fontWeight: '600'}}>
+                                                {announcement.title}
+                                            </h4>
+                                            <span style={{
+                                                ...styles.badge,
+                                                backgroundColor: colors.primary,
+                                                color: 'white',
+                                                fontSize: '0.75rem'
+                                            }}>
+                                                {new Date(announcement.posted_at).toLocaleDateString()}
+                                            </span>
+                                        </div>
+                                        <p style={{
+                                            margin: 0,
+                                            color: colors.textPrimary,
+                                            fontSize: '0.875rem',
+                                            lineHeight: '1.6',
+                                            whiteSpace: 'pre-wrap'
+                                        }}>
+                                            {announcement.content}
+                                        </p>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            <div style={styles.emptyState}>
+                                <MessageSquare size={48} color={colors.textSecondary} style={{marginBottom: '1rem'}} />
+                                <p>No announcements posted yet for this course.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Submit Assignment Modal */}
             {showSubmitModal && (
