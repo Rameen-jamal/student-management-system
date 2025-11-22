@@ -377,7 +377,15 @@ function Dashboard() {
 
     const getAttendancePercentage = () => {
         if (!attendance.length) return 0;
-        return Math.round((attendance.length / (attendance.length + 2)) * 100);
+        const presentCount = attendance.filter(a => {
+            // Check if student is in students_present array
+            return a.students_present && a.students_present.includes(student?.id);
+        }).length;
+        return Math.round((presentCount / attendance.length) * 100);
+    };
+
+    const isStudentPresent = (attendanceRecord) => {
+        return attendanceRecord.students_present && attendanceRecord.students_present.includes(student?.id);
     };
 
     const getPendingAssignments = () => {
@@ -1250,7 +1258,7 @@ function Dashboard() {
                                 {getAttendancePercentage()}%
                             </div>
                             <div style={{fontSize: '0.875rem', color: colors.textSecondary, marginTop: '0.5rem'}}>
-                                {attendance.length} classes attended
+                                {attendance.filter(a => isStudentPresent(a)).length} present / {attendance.length} total classes
                             </div>
                         </div>
 
@@ -1289,7 +1297,9 @@ function Dashboard() {
                             Showing {getFilteredAttendance().length} of {attendance.length} records
                         </div>
 
-                        {getFilteredAttendance().length > 0 ? getFilteredAttendance().map(a => (
+                        {getFilteredAttendance().length > 0 ? getFilteredAttendance().map(a => {
+                            const wasPresent = isStudentPresent(a);
+                            return (
                             <div key={a.id} style={styles.listItem}>
                                 <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem'}}>
                                     <div>
@@ -1298,12 +1308,18 @@ function Dashboard() {
                                             📅 {new Date(a.date).toLocaleDateString()} • 👨‍🏫 Marked by: {a.marked_by_name}
                                         </p>
                                     </div>
-                                    <span style={{...styles.badge, backgroundColor: colors.success, color: 'white'}}>
-                                        ✓ Present
-                                    </span>
+                                    {wasPresent ? (
+                                        <span style={{...styles.badge, backgroundColor: colors.success, color: 'white'}}>
+                                            ✓ Present
+                                        </span>
+                                    ) : (
+                                        <span style={{...styles.badge, backgroundColor: colors.danger, color: 'white'}}>
+                                            ✗ Absent
+                                        </span>
+                                    )}
                                 </div>
                             </div>
-                        )) : <div style={styles.emptyState}>
+                        )}) : <div style={styles.emptyState}>
                             {selectedCourse !== 'all' 
                                 ? 'No attendance records for this course' 
                                 : 'No attendance records yet'}

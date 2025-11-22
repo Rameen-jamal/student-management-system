@@ -951,9 +951,10 @@ class AttendanceViewSet(viewsets.ModelViewSet):
         if hasattr(user, 'facultyprofile'):
             return Attendance.objects.filter(course__in=user.facultyprofile.courses.all())
         
-        # Students: see attendance records where they are present
+        # Students: see ALL attendance records for their enrolled courses (both present and absent)
         elif hasattr(user, 'student_profile'):
-            return Attendance.objects.filter(students_present=user.student_profile)
+            enrolled_courses = user.student_profile.courses_enrolled.all()
+            return Attendance.objects.filter(course__in=enrolled_courses)
         
         return Attendance.objects.none()
 
