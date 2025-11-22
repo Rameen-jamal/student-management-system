@@ -1657,6 +1657,18 @@ const performRemoveTA = async (taId, courseId) => {
                                                             {ta.contact_number}
                                                         </div>
                                                     )}
+                                                    <div style={{
+                                                        fontSize: '0.875rem',
+                                                        marginTop: '0.5rem',
+                                                        padding: '0.25rem 0.5rem',
+                                                        borderRadius: '4px',
+                                                        backgroundColor: (ta.courses_assigned?.length || 0) >= 2 ? colors.danger : colors.light,
+                                                        color: (ta.courses_assigned?.length || 0) >= 2 ? 'white' : colors.textPrimary,
+                                                        fontWeight: '600',
+                                                        display: 'inline-block'
+                                                    }}>
+                                                        {ta.courses_assigned?.length || 0}/2 Courses
+                                                    </div>
                                                 </div>
                                             </div>
                                             
@@ -2444,14 +2456,20 @@ const performRemoveTA = async (taId, courseId) => {
                                         const assignedToOthers = ta.courses_assigned?.some(courseId => 
                                             !courses.some(c => c.id === courseId)
                                         );
+                                        const totalCourses = ta.courses_assigned?.length || 0;
+                                        const isFull = totalCourses >= 2;
                                         return (
-                                            <option key={ta.id} value={ta.id}>
-                                                {ta.first_name} {ta.last_name} - {ta.department}
-                                                {assignedToOthers ? ' (Already assigned to other faculty)' : ''}
+                                            <option key={ta.id} value={ta.id} disabled={isFull}>
+                                                {ta.first_name} {ta.last_name} - {ta.department} ({totalCourses}/2 courses)
+                                                {isFull ? ' - FULL' : ''}
+                                                {assignedToOthers && !isFull ? ' (Assigned to other faculty)' : ''}
                                             </option>
                                         );
                                     })}
                                 </select>
+                                <div style={{fontSize: '0.875rem', color: colors.textSecondary, marginTop: '0.5rem'}}>
+                                    ℹ️ Each TA can be assigned to a maximum of 2 courses
+                                </div>
                             </div>
 
                             <div style={{marginBottom: '1.5rem'}}>

@@ -613,6 +613,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework.parsers import JSONParser
+from django.conf import settings
 
 from .models import (
     Course, Assignment, Submission, Attendance, Quiz, QuizGrade, TATask,
@@ -740,11 +741,36 @@ class CourseViewSet(viewsets.ModelViewSet):
             from ta.models import TAProfile
             ta_profile = TAProfile.objects.get(id=ta_id)
             
+            # Check if TA is already assigned to this course
+            if course in ta_profile.courses_assigned.all():
+                return Response(
+                    {"error": f"TA {ta_profile.first_name} {ta_profile.last_name} is already assigned to {course.code}"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if TA has reached maximum course limit
+            current_courses_count = ta_profile.courses_assigned.count()
+            MAX_COURSES_PER_TA = getattr(settings, 'MAX_COURSES_PER_TA', 2)
+            
+            if current_courses_count >= MAX_COURSES_PER_TA:
+                return Response(
+                    {
+                        "error": f"TA {ta_profile.first_name} {ta_profile.last_name} has reached the maximum limit of {MAX_COURSES_PER_TA} courses",
+                        "current_courses": current_courses_count,
+                        "limit": MAX_COURSES_PER_TA
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             # Add course to TA's assigned courses
             ta_profile.courses_assigned.add(course)
             
             return Response(
-                {"message": f"TA {ta_profile.first_name} {ta_profile.last_name} assigned to {course.code} successfully"},
+                {
+                    "message": f"TA {ta_profile.first_name} {ta_profile.last_name} assigned to {course.code} successfully",
+                    "courses_assigned": current_courses_count + 1,
+                    "remaining_slots": MAX_COURSES_PER_TA - (current_courses_count + 1)
+                },
                 status=status.HTTP_200_OK
             )
         except TAProfile.DoesNotExist:

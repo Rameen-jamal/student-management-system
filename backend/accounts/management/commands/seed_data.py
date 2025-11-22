@@ -695,15 +695,15 @@ class Command(BaseCommand):
         
         self.stdout.write(self.style.SUCCESS(f'✓ Created {attendance_count} attendance records'))
 
-        # Assign TAs to Courses
+        # Assign TAs to Courses (Max 2 per TA)
         self.stdout.write('Assigning TAs to courses...')
-        # TA1 - Computer Science courses
-        ta_profiles[0].courses_assigned.add(courses[0], courses[1], courses[3])  # CS-302, CS-303, CS-201
-        # TA2 - More CS courses
-        ta_profiles[1].courses_assigned.add(courses[0], courses[5], courses[6])  # CS-302, CS-304, CS-202
-        # TA3 - SE and advanced CS courses
-        ta_profiles[2].courses_assigned.add(courses[2], courses[4], courses[7])  # SE-301, CS-401, CS-402
-        self.stdout.write(self.style.SUCCESS(f'✓ Assigned TAs to courses'))
+        # TA1 - Computer Science courses (2 courses max)
+        ta_profiles[0].courses_assigned.add(courses[0], courses[1])  # CS-302, CS-303
+        # TA2 - More CS courses (2 courses max)
+        ta_profiles[1].courses_assigned.add(courses[0], courses[5])  # CS-302, CS-304
+        # TA3 - SE and advanced CS courses (2 courses max)
+        ta_profiles[2].courses_assigned.add(courses[2], courses[4])  # SE-301, CS-401
+        self.stdout.write(self.style.SUCCESS(f'✓ Assigned TAs to courses (max 2 per TA)'))
 
         # Create TA Tasks
         self.stdout.write('Creating TA tasks...')
