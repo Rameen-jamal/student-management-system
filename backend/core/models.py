@@ -226,10 +226,8 @@ class Course(models.Model):
     description = models.TextField(blank=True)
     semester = models.IntegerField(default=1)
     credit_hours = models.IntegerField(default=3)
-    faculty = models.ForeignKey(
+    faculty = models.ManyToManyField(
         'faculty.FacultyProfile',
-        on_delete=models.SET_NULL,
-        null=True,
         blank=True,
         related_name='courses'
     )

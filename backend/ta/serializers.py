@@ -6,15 +6,16 @@ from accounts.models import User
 
 class CourseMinimalSerializer(serializers.ModelSerializer):
     """Minimal course info for TA dashboard"""
-    faculty_name = serializers.SerializerMethodField()
+    faculty_names = serializers.SerializerMethodField()
     
     class Meta:
         model = Course
-        fields = ['id', 'code', 'name', 'semester', 'credit_hours', 'faculty_name']
+        fields = ['id', 'code', 'name', 'semester', 'credit_hours', 'faculty_names']
     
-    def get_faculty_name(self, obj):
-        if obj.faculty:
-            return f"{obj.faculty.first_name} {obj.faculty.last_name}"
+    def get_faculty_names(self, obj):
+        faculty_list = obj.faculty.all()
+        if faculty_list.exists():
+            return ", ".join([f"{f.first_name} {f.last_name}" for f in faculty_list])
         return "No Faculty Assigned"
 
 class TAProfileSerializer(serializers.ModelSerializer):

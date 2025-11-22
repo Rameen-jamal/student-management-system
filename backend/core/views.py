@@ -1102,8 +1102,7 @@ class AdminCourseViewSet(viewsets.ModelViewSet):
         
         try:
             faculty = FacultyProfile.objects.get(id=faculty_id)
-            course.faculty = faculty
-            course.save()
+            course.faculty.add(faculty)
             
             serializer = self.get_serializer(course)
             return Response(serializer.data, status=status.HTTP_200_OK)
@@ -1123,8 +1122,21 @@ class AdminCourseViewSet(viewsets.ModelViewSet):
             )
         
         course = self.get_object()
-        course.faculty = None
-        course.save()
+        faculty_id = request.data.get('faculty_id')
+        
+        if not faculty_id:
+            # If no specific faculty_id, clear all faculty
+            course.faculty.clear()
+        else:
+            # Remove specific faculty member
+            try:
+                faculty = FacultyProfile.objects.get(id=faculty_id)
+                course.faculty.remove(faculty)
+            except FacultyProfile.DoesNotExist:
+                return Response(
+                    {'error': 'Faculty not found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
         
         serializer = self.get_serializer(course)
         return Response(serializer.data, status=status.HTTP_200_OK)

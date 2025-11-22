@@ -371,14 +371,15 @@ class Command(BaseCommand):
 
         courses = []
         for data in courses_data:
+            faculty_member = data.pop('faculty')  # Remove faculty from data
             course = Course.objects.create(
                 name=data['name'],
                 code=data['code'],
                 description=data['description'],
                 semester=data['semester'],
-                credit_hours=data['credit_hours'],
-                faculty=data['faculty']
+                credit_hours=data['credit_hours']
             )
+            course.faculty.add(faculty_member)  # Add faculty using ManyToMany
             courses.append(course)
             self.stdout.write(self.style.SUCCESS(f'✓ Course created: {data["code"]} - {data["name"]}'))
 

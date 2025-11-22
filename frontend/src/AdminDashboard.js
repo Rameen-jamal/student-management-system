@@ -702,15 +702,16 @@ function AdminDashboard() {
         }
     };
 
-    const handleUnassignFaculty = async (courseId) => {
+    const handleUnassignFaculty = async (courseId, facultyId = null) => {
         showConfirmDialog(
             'Remove Faculty Assignment',
-            'Are you sure you want to remove faculty assignment from this course?',
+            facultyId ? 'Are you sure you want to remove this faculty member from the course?' : 'Are you sure you want to remove all faculty assignments from this course?',
             async () => {
                 try {
+                    const payload = facultyId ? { faculty_id: facultyId } : {};
                     await axios.post(
                         `${API_ENDPOINTS.ADMIN_COURSES}${courseId}/unassign_faculty/`,
-                        {},
+                        payload,
                         { headers }
                     );
                     showDialog('Success', 'Faculty unassigned successfully!', 'success');
@@ -1143,26 +1144,30 @@ function AdminDashboard() {
                                         <td style={styles.td}>{c.credit_hours}h</td>
                                         <td style={styles.td}>{getSemesterName(c.semester)}</td>
                                         <td style={styles.td}>
-                                            {c.faculty_detail ? (
-                                                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                                                    <span style={{ 
-                                                        ...styles.badge,
-                                                        backgroundColor: `${colors.secondary}15`,
-                                                        color: colors.secondary
-                                                    }}>
-                                                        {c.faculty_detail.full_name}
-                                                    </span>
-                                                    <button onClick={() => handleUnassignFaculty(c.id)} style={{
-                                                        padding: "4px 8px",
-                                                        backgroundColor: colors.danger,
-                                                        color: "white",
-                                                        border: "none",
-                                                        borderRadius: "4px",
-                                                        cursor: "pointer",
-                                                        fontSize: "0.75rem"
-                                                    }}>
-                                                        <XCircle size={12} />
-                                                    </button>
+                                            {c.faculty_detail && c.faculty_detail.length > 0 ? (
+                                                <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+                                                    {c.faculty_detail.map((fac) => (
+                                                        <div key={fac.id} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                                                            <span style={{ 
+                                                                ...styles.badge,
+                                                                backgroundColor: `${colors.secondary}15`,
+                                                                color: colors.secondary
+                                                            }}>
+                                                                {fac.full_name}
+                                                            </span>
+                                                            <button onClick={() => handleUnassignFaculty(c.id, fac.id)} style={{
+                                                                padding: "4px 8px",
+                                                                backgroundColor: colors.danger,
+                                                                color: "white",
+                                                                border: "none",
+                                                                borderRadius: "4px",
+                                                                cursor: "pointer",
+                                                                fontSize: "0.75rem"
+                                                            }}>
+                                                                <XCircle size={12} />
+                                                            </button>
+                                                        </div>
+                                                    ))}
                                                 </div>
                                             ) : (
                                                 <span style={{ color: colors.textSecondary, fontStyle: "italic" }}>Not assigned</span>
