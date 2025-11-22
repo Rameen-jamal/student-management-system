@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "./config/api";
 import { 
     User, BookOpen, Calendar, Award, FileText, ClipboardCheck, Clock, Users, LogOut, 
-    Search, Filter, X, CheckCircle, AlertCircle, Clock3, TrendingUp, GraduationCap, 
-    Mail, Phone, MapPin, Building, Hash, Target, MessageSquare, ChevronDown, Plus,
+    Search, Filter, X, CheckCircle, AlertCircle, Clock3, 
+    Mail, Phone, MapPin, Building, Hash, MessageSquare, Plus,
     Upload, Send, Edit, Briefcase, Save, FileQuestion, Timer, XCircle
 } from 'lucide-react';
 

@@ -5,8 +5,8 @@ import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "./config/api";
 import { 
     Users, BookOpen, GraduationCap, DollarSign, CreditCard, UserCheck, 
-    LogOut, Plus, Trash2, Edit, Search, Shield, CheckCircle, XCircle,
-    Calendar, TrendingUp, Award, UserPlus, BookPlus, AlertCircle, X
+    LogOut, Plus, Shield, CheckCircle, XCircle,
+    Calendar, Award, UserPlus, BookPlus, AlertCircle, X
 } from 'lucide-react';
 
 // Dialog Component
