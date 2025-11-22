@@ -498,7 +498,7 @@ function FacultyDashboard() {
     const [showAssignmentForm, setShowAssignmentForm] = useState(false);
     const [showQuizForm, setShowQuizForm] = useState(false);
     const [showAnnouncementForm, setShowAnnouncementForm] = useState({});
-    const [assignmentFormData, setAssignmentFormData] = useState({ title:'', description:'', course:'', file: null });
+    const [assignmentFormData, setAssignmentFormData] = useState({ title:'', description:'', course:'', due_date:'', max_points:100, file: null });
     const [quizFormData, setQuizFormData] = useState({ title:'', course:'', date:'', time_limit:'' });
     const [announcementFormData, setAnnouncementFormData] = useState({ title:'', content:'' });
     
@@ -586,6 +586,8 @@ function FacultyDashboard() {
             formData.append("title", assignmentFormData.title);
             formData.append("description", assignmentFormData.description);
             formData.append("course", assignmentFormData.course);
+            formData.append("due_date", assignmentFormData.due_date);
+            formData.append("max_points", assignmentFormData.max_points);
             if (assignmentFormData.file) formData.append("file", assignmentFormData.file);
 
             await axios.post(API_ENDPOINTS.ASSIGNMENTS, formData, {
@@ -593,7 +595,7 @@ function FacultyDashboard() {
             });
 
             setShowAssignmentForm(false);
-            setAssignmentFormData({ title:'', description:'', course:'', file: null });
+            setAssignmentFormData({ title:'', description:'', course:'', due_date:'', max_points:100, file: null });
             fetchFacultyData();
         } catch(err) {
             console.error("Error adding assignment:", err);
@@ -1333,7 +1335,20 @@ const performRemoveTA = async (taId, courseId) => {
                                     <option value="">Select Course</option>
                                     {courses.map(c=><option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
                                 </select>
-                                <input type="file" onChange={e=>setAssignmentFormData({...assignmentFormData,file:e.target.files[0]})} style={styles.input}/>
+                                <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+                                    <div>
+                                        <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600', color: colors.textSecondary}}>Due Date</label>
+                                        <input type="datetime-local" value={assignmentFormData.due_date} onChange={e=>setAssignmentFormData({...assignmentFormData,due_date:e.target.value})} required style={styles.input}/>
+                                    </div>
+                                    <div>
+                                        <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600', color: colors.textSecondary}}>Max Points</label>
+                                        <input type="number" placeholder="100" value={assignmentFormData.max_points} onChange={e=>setAssignmentFormData({...assignmentFormData,max_points:parseFloat(e.target.value)})} required min="1" style={styles.input}/>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600', color: colors.textSecondary}}>Attachment (Optional)</label>
+                                    <input type="file" onChange={e=>setAssignmentFormData({...assignmentFormData,file:e.target.files[0]})} style={styles.input}/>
+                                </div>
                                 <button type="submit" style={styles.button}>
                                     <Save size={16} />
                                     Save Assignment
