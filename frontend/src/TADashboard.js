@@ -450,8 +450,8 @@ function TADashboard() {
                                         <div>
                                             <h4>{task.title}</h4>
                                             <p>{task.description}</p>
-                                            <p><strong>Course:</strong> {task.course?.code || 'N/A'}</p>
-                                            <p><strong>Assigned by:</strong> {task.assigned_by?.full_name || 'Faculty'}</p>
+                                            <p><strong>Course:</strong> {task.course_name || 'N/A'}</p>
+                                            <p><strong>Assigned by:</strong> {task.assigned_by_name || 'Faculty'}</p>
                                             <p><strong>Due Date:</strong> {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}</p>
                                         </div>
                                         <button

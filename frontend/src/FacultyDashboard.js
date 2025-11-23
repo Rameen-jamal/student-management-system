@@ -471,6 +471,7 @@ function FacultyDashboard() {
     const [submissions, setSubmissions] = useState([]); // NEW: for Grades tab
     const [quizGrades, setQuizGrades] = useState([]); // NEW: for Grades tab
     const [tas, setTAs] = useState([]); // NEW: for TAs tab
+    const [taTasks, setTATasks] = useState([]); // For TA Tasks
     
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('overview');
@@ -497,6 +498,8 @@ function FacultyDashboard() {
 
     // Forms state
     const [showAssignmentForm, setShowAssignmentForm] = useState(false);
+    const [showTaskForm, setShowTaskForm] = useState(false);
+    const [taskFormData, setTaskFormData] = useState({ ta: '', course: '', title: '', description: '', due_date: '' });
     const [showQuizForm, setShowQuizForm] = useState(false);
     const [showAnnouncementForm, setShowAnnouncementForm] = useState({});
     const [assignmentFormData, setAssignmentFormData] = useState({ title:'', description:'', course:'', due_date:'', max_points:100, file: null });
@@ -540,7 +543,7 @@ function FacultyDashboard() {
             // Updated Promise.all to fetch new data for the new tabs
             const [
                 facultyRes, coursesRes, assignmentsRes, quizzesRes, studentsRes, 
-                submissionsRes, quizGradesRes, tasRes
+                submissionsRes, quizGradesRes, tasRes, taTasksRes
             ] = await Promise.all([
                 axios.get(API_ENDPOINTS.FACULTY, { headers }),
                 axios.get(API_ENDPOINTS.COURSES, { headers }),
@@ -550,6 +553,7 @@ function FacultyDashboard() {
                 axios.get(API_ENDPOINTS.SUBMISSIONS, { headers }), // For Grades (Assignments)
                 axios.get(API_ENDPOINTS.QUIZ_GRADES, { headers }), // For Grades (Quizzes)
                 axios.get(API_ENDPOINTS.TAS, { headers }), // For TAs tab
+                axios.get(API_ENDPOINTS.TA_TASKS, { headers }), // For TA Tasks
             ]);
 
             if (facultyRes.data.length > 0) setFaculty(facultyRes.data[0]);
@@ -560,6 +564,7 @@ function FacultyDashboard() {
             setSubmissions(submissionsRes.data); 
             setQuizGrades(quizGradesRes.data);
             setTAs(tasRes.data);
+            setTATasks(taTasksRes.data);
 
             // Initialize announcement form toggles per course
             const annFormObj = {};
@@ -694,6 +699,21 @@ const handleAnnouncementSubmit = async (e, courseId) => {
     } catch(err) {
         console.error(err);
         showDialog('Error', 'Failed to post announcement. Please try again.', 'error');
+    }
+};
+
+// ---------------- Task Submit ----------------
+const handleTaskSubmit = async (e) => {
+    e.preventDefault();
+    try {
+        await axios.post(API_ENDPOINTS.TA_TASKS, taskFormData, { headers });
+        setShowTaskForm(false);
+        setTaskFormData({ ta: '', course: '', title: '', description: '', due_date: '' });
+        fetchFacultyData();
+        showDialog('Success', 'Task assigned to TA successfully!', 'success');
+    } catch(err) {
+        console.error("Error assigning task:", err);
+        showDialog('Error', 'Failed to assign task. Please try again.', 'error');
     }
 };
 
@@ -1053,6 +1073,7 @@ const performRemoveTA = async (taId, courseId) => {
                         {name: 'quizzes', icon: ClipboardCheck},
                         {name: 'students', icon: Users},
                         {name: 'tas', icon: Briefcase},
+                        {name: 'tasks', icon: ClipboardCheck},
                         {name: 'attendance', icon: Calendar},
                         {name: 'grades', icon: Award},
                         {name: 'materials', icon: Upload}
@@ -1798,6 +1819,91 @@ const performRemoveTA = async (taId, courseId) => {
                         ) : (
                             <div style={styles.emptyState}>No TAs available</div>
                         )}
+                    </div>
+                )}
+
+                {/* --- Tasks Tab (Assign Tasks to TAs) --- */}
+                {activeTab === 'tasks' && (
+                    <div style={styles.card}>
+                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem'}}>
+                            <h2 style={styles.cardTitle}>
+                                <ClipboardCheck size={24} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.5rem'}} />
+                                TA Tasks ({taTasks.length})
+                            </h2>
+                            <button style={styles.button} onClick={() => setShowTaskForm(!showTaskForm)}>
+                                <Plus size={16} />
+                                {showTaskForm ? 'Hide Form' : 'Assign Task'}
+                            </button>
+                        </div>
+
+                        {showTaskForm && (
+                            <form onSubmit={handleTaskSubmit} style={{...styles.form, marginBottom: '1.5rem'}}>
+                                <select value={taskFormData.ta} onChange={e=>setTaskFormData({...taskFormData,ta:e.target.value})} required style={styles.input}>
+                                    <option value="">Select TA</option>
+                                    {tas.map(ta=><option key={ta.id} value={ta.id}>{ta.first_name} {ta.last_name}</option>)}
+                                </select>
+                                <select value={taskFormData.course} onChange={e=>setTaskFormData({...taskFormData,course:e.target.value})} required style={styles.input}>
+                                    <option value="">Select Course</option>
+                                    {courses.map(c=><option key={c.id} value={c.id}>{c.code} - {c.name}</option>)}
+                                </select>
+                                <input type="text" placeholder="Task Title" value={taskFormData.title} onChange={e=>setTaskFormData({...taskFormData,title:e.target.value})} required style={styles.input}/>
+                                <textarea placeholder="Task Description" value={taskFormData.description} onChange={e=>setTaskFormData({...taskFormData,description:e.target.value})} required style={styles.textarea}/>
+                                <div>
+                                    <label style={{display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', fontWeight: '600', color: colors.textSecondary}}>Due Date</label>
+                                    <input type="datetime-local" value={taskFormData.due_date} onChange={e=>setTaskFormData({...taskFormData,due_date:e.target.value})} required style={styles.input}/>
+                                </div>
+                                <button type="submit" style={styles.button}>
+                                    <Save size={16} />
+                                    Assign Task
+                                </button>
+                            </form>
+                        )}
+
+                        {taTasks.length > 0 ? taTasks.map(task=>(
+                            <div key={task.id} style={{...styles.listItem, borderLeft: `5px solid ${
+                                task.status === 'completed' ? colors.success : 
+                                task.status === 'in_progress' ? colors.warning : 
+                                colors.textSecondary
+                            }`}}> 
+                                <div style={{display: 'flex', alignItems: 'start', gap: '1rem'}}>
+                                    <ClipboardCheck size={24} style={{color: colors.primary, flexShrink: 0}} />
+                                    <div style={{flex: 1}}>
+                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem'}}>
+                                            <h4 style={{margin: 0, color: colors.textPrimary}}>{task.title}</h4>
+                                            <span style={{
+                                                ...styles.badge,
+                                                backgroundColor: 
+                                                    task.status === 'completed' ? colors.success : 
+                                                    task.status === 'in_progress' ? colors.warning : 
+                                                    colors.textSecondary,
+                                                color: 'white'
+                                            }}>
+                                                {task.status.replace('_', ' ').toUpperCase()}
+                                            </span>
+                                        </div>
+                                        <p style={{margin: '0.25rem 0', fontSize: '0.875rem', color: colors.textSecondary}}>
+                                            <User size={14} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem'}} />
+                                            TA: {task.ta_name}
+                                        </p>
+                                        <p style={{margin: '0.25rem 0', fontSize: '0.875rem', color: colors.textSecondary}}>
+                                            <BookOpen size={14} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem'}} />
+                                            Course: {task.course_name}
+                                        </p>
+                                        <p style={{margin: '0.25rem 0', fontSize: '0.875rem', color: colors.textSecondary}}>
+                                            <Calendar size={14} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem'}} />
+                                            Due: {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
+                                        </p>
+                                        <p style={{margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: colors.textPrimary}}>{task.description}</p>
+                                        {task.completion_notes && (
+                                            <div style={{marginTop: '0.75rem', padding: '0.75rem', backgroundColor: colors.light, borderRadius: '6px', border: `1px solid ${colors.border}`}}>
+                                                <strong style={{fontSize: '0.875rem', color: colors.textSecondary}}>Completion Notes:</strong>
+                                                <p style={{margin: '0.25rem 0 0 0', fontSize: '0.875rem', color: colors.textPrimary}}>{task.completion_notes}</p>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        )) : <div style={styles.emptyState}>No tasks assigned yet</div>}
                     </div>
                 )}
 
