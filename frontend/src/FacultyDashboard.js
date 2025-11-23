@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "./config/api";
+import API_BASE_URL from "./config/api";
 import { 
     User, BookOpen, Calendar, Award, FileText, ClipboardCheck, Clock, Users, LogOut, 
     Search, Filter, X, CheckCircle, AlertCircle, Clock3, 
@@ -1396,7 +1397,19 @@ const performRemoveTA = async (taId, courseId) => {
                                 <div style={{display: 'flex', alignItems: 'start', gap: '1rem'}}>
                                     <FileText size={24} style={{color: colors.warning, flexShrink: 0}} />
                                     <div style={{flex: 1}}>
-                                        <h4 style={{margin: '0 0 0.5rem 0', color: colors.textPrimary}}>{a.title}</h4>
+                                        <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '0.5rem'}}>
+                                            <h4 style={{margin: 0, color: colors.textPrimary}}>{a.title}</h4>
+                                            {a.file && (
+                                                <span style={{
+                                                    ...styles.badge,
+                                                    backgroundColor: colors.success,
+                                                    color: 'white',
+                                                    fontSize: '0.75rem'
+                                                }}>
+                                                    📎 File Attached
+                                                </span>
+                                            )}
+                                        </div>
                                         <p style={{margin: '0.25rem 0', fontSize: '0.875rem', color: colors.textSecondary}}>
                                             <BookOpen size={14} style={{display: 'inline-block', verticalAlign: 'middle', marginRight: '0.25rem'}} />
                                             {a.course_code} - {a.course_name}
@@ -1410,6 +1423,38 @@ const performRemoveTA = async (taId, courseId) => {
                                             Max Points: {a.max_points}
                                         </p>
                                         <p style={{margin: '0.5rem 0 0 0', fontSize: '0.875rem', color: colors.textPrimary}}>{a.description}</p>
+                                        {a.file && (
+                                            <a 
+                                                href={a.file.startsWith('http') ? a.file : `${API_BASE_URL}${a.file}`}
+                                                download
+                                                rel="noopener noreferrer"
+                                                style={{
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.5rem',
+                                                    marginTop: '0.75rem',
+                                                    padding: '0.5rem 1rem',
+                                                    backgroundColor: colors.light,
+                                                    color: colors.primary,
+                                                    textDecoration: 'none',
+                                                    borderRadius: '6px',
+                                                    border: `1px solid ${colors.border}`,
+                                                    fontSize: '0.875rem',
+                                                    fontWeight: '600',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.backgroundColor = colors.primary;
+                                                    e.target.style.color = 'white';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.backgroundColor = colors.light;
+                                                    e.target.style.color = colors.primary;
+                                                }}
+                                            >
+                                                📎 View Assignment File
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             </div>

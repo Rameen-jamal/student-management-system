@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { API_ENDPOINTS } from "./config/api";
+import API_BASE_URL from "./config/api";
 import { 
     User, 
     BookOpen, 
@@ -1051,10 +1052,40 @@ function Dashboard() {
                                             )}
                                         </div>
                                     </div>
-                                    <div style={{display: 'flex', gap: '1.5rem', fontSize: '0.875rem', color: colors.textSecondary, flexWrap: 'wrap'}}>
+                                    <div style={{display: 'flex', gap: '1.5rem', fontSize: '0.875rem', color: colors.textSecondary, flexWrap: 'wrap', alignItems: 'center'}}>
                                         <span>📚 {a.course_name}</span>
                                         <span>📅 Due: {dueDate.toLocaleDateString()}</span>
                                         <span>🎯 {a.max_points} points</span>
+                                        {a.file && (
+                                            <a 
+                                                href={a.file.startsWith('http') ? a.file : `${API_BASE_URL}${a.file}`}
+                                                download
+                                                rel="noopener noreferrer"
+                                                style={{
+                                                    color: colors.primary,
+                                                    textDecoration: 'none',
+                                                    fontWeight: '600',
+                                                    display: 'inline-flex',
+                                                    alignItems: 'center',
+                                                    gap: '0.25rem',
+                                                    padding: '0.25rem 0.75rem',
+                                                    backgroundColor: colors.light,
+                                                    borderRadius: '6px',
+                                                    border: `1px solid ${colors.border}`,
+                                                    transition: 'all 0.2s'
+                                                }}
+                                                onMouseEnter={(e) => {
+                                                    e.target.style.backgroundColor = colors.primary;
+                                                    e.target.style.color = 'white';
+                                                }}
+                                                onMouseLeave={(e) => {
+                                                    e.target.style.backgroundColor = colors.light;
+                                                    e.target.style.color = colors.primary;
+                                                }}
+                                            >
+                                                📎 Download Assignment File
+                                            </a>
+                                        )}
                                     </div>
                                 </div>
                             );
