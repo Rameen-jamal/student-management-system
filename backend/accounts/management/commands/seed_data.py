@@ -36,17 +36,24 @@ class Command(BaseCommand):
 
         # Create Admin User
         self.stdout.write('Creating admin user...')
-        if not User.objects.filter(username='admin').exists():
-            admin = User.objects.create_superuser(
-                username='admin',
-                email='admin@fastflex.com',
-                password='Admin@123',
-                first_name='System',
-                last_name='Administrator'
-            )
-            admin.role = 'admin'  # Ensure role is set to admin
-            admin.save()
-            self.stdout.write(self.style.SUCCESS(f'✓ Admin created: admin / Admin@123'))
+        admin, created = User.objects.update_or_create(
+            username='admin',
+            defaults={
+                'email': 'admin@fastflex.com',
+                'first_name': 'System',
+                'last_name': 'Administrator',
+                'is_staff': True,
+                'is_superuser': True,
+                'is_active': True,
+                'role': 'admin',
+            }
+        )
+        admin.set_password('Admin@123')
+        admin.save()
+        if created:
+            self.stdout.write(self.style.SUCCESS('✓ Admin created: admin / Admin@123'))
+        else:
+            self.stdout.write(self.style.SUCCESS('✓ Admin reset: admin / Admin@123'))
 
         # Create Faculty Users
         self.stdout.write('Creating faculty users...')
